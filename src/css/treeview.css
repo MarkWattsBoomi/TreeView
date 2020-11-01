@@ -1,0 +1,263 @@
+
+.treeview {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.treeview-header {
+    background-color: #033d58;
+    flex-grow: 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+}
+
+.treeview-header-title-wrapper {
+    display: flex;
+    flex-direction: row;
+}
+
+.treeview-header-title {
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    color: #DF6D59;
+    color: #ddd;
+    font-size: 18px;
+    font-weight: 500;
+    margin: auto;
+    margin-left: 18px;
+    user-select: none;
+}
+
+.treeview-header-buttons {
+    margin-left: auto;
+    display: flex;
+    flex-direction: row;
+}
+
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(359deg);
+    }
+}
+
+.treeview-header-button {
+    font-size: 18px;
+    margin: 0;
+    color: #ddd;
+    align-self: center;
+    top: 0 !important;
+    margin: auto;
+    margin-right: 10px;
+}
+
+.treeview-header-button:hover {
+    color: #ff7c66;
+    cursor: pointer;
+}
+
+.treeview-header-button-spin {
+    animation: spin 0.8s infinite linear;
+    color: #f2a1b2;
+}
+
+.treeview-scroller {
+    overflow: scroll;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.treeview-body {
+    flex-grow: 1;
+    flex-shrink: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    overflow: visible;
+}
+
+.treeview-node {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 0;
+    pointer-events: none;
+}
+
+.treeview-node-title {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    pointer-events: none;
+}
+
+.treeview-node-expander {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
+    width: 30px;
+}
+
+.treeview-node-expander:hover {
+    color: #ff7c66;
+    cursor: pointer;
+}
+
+.treeview-node-expander-icon {
+    font-size: 15px;
+    margin: auto;
+}
+
+.treeview-node-item {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
+    padding: 2px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 10px;
+    pointer-events: all;
+    color: #033d58;
+}
+
+.can-drop {
+    background-color: gold !important;
+}
+
+.cannot-drop {
+    background-color: red !important;
+}
+
+.treeview-node-item-selected {
+    background-color: #aaa;
+    padding: 2px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 10px;
+}
+
+.treeview-node-item:not(.treeview-node-item-selected):hover {
+    background-color: #ddd;
+    color: #666;
+    cursor: pointer;
+}
+
+/*.treeview-node-item:not(.treeview-node-item-selected):hover .treeview-node-label {
+    text-decoration: underline;
+}*/
+
+.treeview-node-icons {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
+    pointer-events: none;
+}
+
+.treeview-node-icon {
+    font-size: 18px;
+    margin: auto;
+    margin-right: 10px;
+    top: -1px !important;
+    pointer-events: none;
+}
+
+.treeview-node-label {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
+    font-size: 18px;
+    white-space: nowrap;
+    margin-right: 10px;
+    pointer-events: none;
+    user-select: none;
+}
+
+.treeview-node-button {
+    font-size: 18px;
+    margin: auto;
+    margin-right: 10px;
+    top: -1px !important;
+    cursor: pointer;
+    margin-right: 10px;
+    pointer-events: all;
+}
+
+.treeview-node-button:hover {
+    color: #ff7c66;
+    cursor: pointer;
+}
+
+.treeview-node-filler {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    font-size: 18px;
+    color: #033d58;
+    white-space: nowrap;
+    margin-right: auto;
+}
+
+.context-menu {
+    box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
+    position: fixed;
+    display: none;
+    background-color: #fefefe;
+    border-radius: 10px;
+    border: 2px solid #033d58;
+    pointer-events: all;
+    z-index: 10000;
+}
+
+.context-menu-list {
+    list-style: none;
+    padding: 10px;
+}
+
+.context-menu-item {
+    font-weight: 500;
+    font-size: 18px;
+    padding: 10px 40px 10px 20px;
+    cursor: pointer;
+    color: #033d58;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.context-menu-item:hover {
+    color: #033d58;
+    background-color: #ddd;
+}
+
+.treeview-can-drop {
+    border-left: 5px solid #ff7c66;
+}
+
+.treeview-pinned {
+    color: red;
+}
+
+.treeview-proxy {
+    display: none;
+    width: 30px;
+    background-color: #033d58;
+}
+
+.treeview-proxy-label {
+    color: #ddd;
+    font-size: 18px;
+    font-weight: 500;
+    writing-mode: tb-rl;
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    transform: rotate(180deg);
+    white-space: nowrap;
+    margin: auto;
+    line-height: 1.2;
+    font-family: 'Fieldwork Geo Regular', Tahoma;
+}
