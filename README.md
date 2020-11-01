@@ -100,6 +100,19 @@ Sets wether drag and drop of nodes is enabled.
 
 If set to true then only the lowest level nodes will show buttons for edit & delete
 
+## classes
+
+Like all components, adding a "classes" attribute will cause that string to be added to the base component's class value
+
+
+# Styling
+
+All elements of the tree can be styled by adding the specific style names to your player.
+
+
+# Page Conditions
+
+The component respects the show / hide rules applied by the containing page.
 
 
 # Data Model
