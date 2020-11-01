@@ -1,3 +1,4 @@
+import { FlowOutcome } from 'flow-component-model';
 import React from 'react';
 import TreeView from './TreeView';
 import TreeViewItem from './TreeViewItem';
@@ -79,30 +80,19 @@ export default class TreeViewNode extends React.Component<any, any> {
             selectedClass = " treeview-node-item-selected";
         }
 
-        if(node.itemStatus.toLowerCase() === "active") {
-            if(root.outcomes["OnEdit"] && !(root.getAttribute("EditLowest","").toLowerCase() === "true" && ( node.children?.size>0))) {
+        Object.keys(root.outcomes).forEach((key: string) => {
+            const outcome: FlowOutcome = root.outcomes[key];
+            if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect") {
                 buttons.push(
                     <span 
-                        key="EDIT"
-                        title={root.outcomes["OnEdit"].label}
-                        className={"glyphicon glyphicon-" + (root.outcomes["OnEdit"].attributes["icon"]?.value || "edit") + " treeview-node-button"}
-                        onClick={(e: any) => {e.stopPropagation(); root.nodeEdit(node)}}
+                        key={key}
+                        className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " treeview-node-button"} 
+                        title={outcome.label || key}
+                        onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node)}}
                     />
                 );
             }
-        
-            if(root.outcomes["OnDelete"]) {
-                buttons.push(
-                    <span 
-                        key="REMOVE"
-                        title={root.outcomes["OnDelete"].label}
-                        className={"glyphicon glyphicon-" + (root.outcomes["OnDelete"].attributes["icon"]?.value || "trash") + " treeview-node-button"}
-                        onClick={(e: any) => {e.stopPropagation(); root.nodeDelete(node)}}
-                    />
-                );
-            }
-            let mystring = root.getAttribute("attr1","not set");
-        }
+        });
         
         return( 
             <div
@@ -121,7 +111,7 @@ export default class TreeViewNode extends React.Component<any, any> {
                     </div>
                     <div
                         className={"treeview-node-item" + selectedClass}
-                        onClick={(e: any) => {root.nodeSelect(node)}}
+                        onClick={(e: any) => {root.doOutcome("OnSelect",node)}}
                         title={node.itemDescription}
                         draggable={this.props.allowRearrange}
                         onDragStart={(e) => {root.onDrag(e,node.itemId + ""); }}

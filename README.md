@@ -29,53 +29,24 @@ Note: If the types in the tree vary due to a Flow Service naming issue don't wor
 
 # Outcomes
 
-Outcomes are available for the following and must be named as shown.
+Any outcome attached to the component is dealt with in this way: -
 
-Outcomes are all optional and ignored if not attached to the component.
+* If the outcome is set as "Appears At Top" then it will become a button in the top title bar otherwise it becomes a button on the tree node.
 
-## OnSelect
+* If the outcome has its "When this outcome is selected" option set to either "Save Changes" or "Partially Save Changes" and is attached 
+to a tree node then the node is set as the state value when triggered.
 
-Triggered when a node is selected, sets the state value to selected node then triggers the outcome if it exists.
+* If the outcome has an "icon" attribute then this value is used to specify the icon, otherwist a default "+" icon is used.  Icons are 
+bootstrap glyphicons without the "glyphicon-" prefix.
 
-## OnEdit
+* If the outcome has a "Label" set then this is used as the tooltip otherwise the outcome's name ius used.
 
-If exists then shows an edit button beside the node which when clicked sets the state value and triggers the outcome.
+* "OnSelect" is a special case and is attached to the action of clicking a tree node.
 
-The icon for the button is set via the "icon" attribute of the outcome.
+* All outcomes including "OnSelect" are optional.
 
-The tooltip for the button comes from the outcome's label.
+* Outcome order is respected.  The expand and contract defualt buttons in the title bar are given order 10 & 20 respectively to allow for controlling button display order.
 
-Icons are bootstrap glyphicons without the "glyphicon-" prefix.
-
-## OnDelete
-
-If exists then shows an delete button beside the node which when clicked sets the state value and triggers the outcome.
-
-The icon for the button is set via the "icon" attribute of the outcome.
-
-The tooltip for the button comes from the outcome's label.
-
-Icons are bootstrap glyphicons without the "glyphicon-" prefix.
-
-## OnRefresh
-
-If exists then shows a refresh button in the title bar which when clicked sets the state value and triggers the outcome.
-
-The icon for the button is set via the "icon" attribute of the outcome.
-
-The tooltip for the button comes from the outcome's label.
-
-Icons are bootstrap glyphicons without the "glyphicon-" prefix.
-
-## OnBack
-
-If exists then shows a back button in the title bar which when clicked sets the state value and triggers the outcome.
-
-The icon for the button is set via the "icon" attribute of the outcome.
-
-The tooltip for the button comes from the outcome's label.
-
-Icons are bootstrap glyphicons without the "glyphicon-" prefix.
 
 
 # Settings

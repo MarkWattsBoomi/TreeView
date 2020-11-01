@@ -1,6 +1,6 @@
 import React, { CSSProperties } from 'react';
 
-import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty } from 'flow-component-model';
+import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType } from 'flow-component-model';
 import './css/treeview.css';
 import { MessageBox } from './MessageBox/MessageBox';
 import TreeViewNode from './TreeViewNode';
@@ -89,11 +89,12 @@ export default class TreeView extends FlowComponent {
         this.hideMessageBox = this.hideMessageBox.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
         this.convertNode = this.convertNode.bind(this);
-        this.nodeSelect = this.nodeSelect.bind(this);
-        this.nodeEdit = this.nodeEdit.bind(this);
-        this.nodeDelete = this.nodeDelete.bind(this);
-        this.refresh = this.refresh.bind(this);
-        this.back = this.back.bind(this);
+        //this.nodeSelect = this.nodeSelect.bind(this);
+        //this.nodeEdit = this.nodeEdit.bind(this);
+        //this.nodeDelete = this.nodeDelete.bind(this);
+        //this.refresh = this.refresh.bind(this);
+        //this.back = this.back.bind(this);
+        this.doOutcome = this.doOutcome.bind(this);
         this.expand = this.expand.bind(this);
         this.collapse = this.collapse.bind(this);
         this.setNode = this.setNode.bind(this);
@@ -145,52 +146,17 @@ export default class TreeView extends FlowComponent {
         return result;
     }
 
-    async nodeSelect(node: TreeViewItem) {
-        console.log("select node " + node.itemId);
-        await this.setStateValue(this.convertNode(node.objectData))
-        this.selectedNode = node;
-        this.forceUpdate();
-        if(this.outcomes["OnSelect"]) {
-            //set state
-            await this.triggerOutcome("OnSelect")
+    async doOutcome(outcomeName: string, node: any) {
+        if(this.outcomes[outcomeName].pageActionBindingType !== ePageActionBindingType.NoSave && node) {
+            await this.setStateValue(this.convertNode(node.objectData))
+            this.selectedNode = node;
+            this.forceUpdate();
+        }
+        if(this.outcomes[outcomeName]) {
+            await this.triggerOutcome(outcomeName);
         }
     }
-
-    async nodeEdit(node: any) {
-        console.log("edit node " + node.itemId);
-        await this.setStateValue(this.convertNode(node.objectData))
-        this.selectedNode = node;
-        this.forceUpdate();
-        if(this.outcomes["OnEdit"]) {
-            //set state
-            await this.triggerOutcome("OnEdit")
-        }
-    }
-
-    async nodeDelete(node: any) {
-        console.log("delete node " + node.itemId);
-        await this.setStateValue(this.convertNode(node.objectData))
-        this.selectedNode = node;
-        this.forceUpdate();
-        if(this.outcomes["OnDelete"]) {
-            //set state
-            await this.triggerOutcome("OnDelete")
-        }
-    }
-
-    async refresh() {
-        console.log("refresh");
-        if(this.outcomes["OnRefresh"]) {
-            await this.triggerOutcome("OnRefresh")
-        }
-    }
-
-    async back() {
-        console.log("back");
-        if(this.outcomes["OnBack"]) {
-            await this.triggerOutcome("OnBack")
-        }
-    }
+   
 
     async expand() {
         console.log("expand");
@@ -198,7 +164,6 @@ export default class TreeView extends FlowComponent {
             node.expanded=true;
             node.forceUpdate();
         });
-        
     }
 
     async collapse() {
@@ -318,25 +283,69 @@ export default class TreeView extends FlowComponent {
     buildHeaderButtons() : Array<any> {
         let content : any = [];
 
-               
-        content.push(
-            <span 
-                key="EXPAND"
-                className={"glyphicon glyphicon-plus treeview-header-button"} 
-                title={"Expand All"}
-                onClick={this.expand}
-            />
-        );
+        let lastOrder: number = 0;
+        let addedExpand: boolean = false;
+        let addedContract: boolean = false;
+        Object.keys(this.outcomes).forEach((key: string) => {
+            const outcome: FlowOutcome = this.outcomes[key];
+            if(outcome.order > 10 && addedExpand===false){
+                content.push(
+                    <span 
+                        key="EXPAND"
+                        className={"glyphicon glyphicon-plus treeview-header-button"} 
+                        title={"Expand All"}
+                        onClick={this.expand}
+                    />
+                );
+                addedExpand=true;
+            }
+            if(outcome.order > 20 && addedContract===false){
+                content.push(
+                    <span 
+                        key="CONTRACT"
+                        className={"glyphicon glyphicon-minus treeview-header-button"} 
+                        title={"Collapse All"}
+                        onClick={this.collapse}
+                    />
+                );
+                addedContract=true;
+            }
+            if (outcome.isBulkAction) {
+                content.push(
+                    <span 
+                        key={key}
+                        className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " treeview-header-button"} 
+                        title={outcome.label || key}
+                        onClick={(e: any) => {this.doOutcome(key, undefined)}}
+                    />
+                );
+            }
+        });
+        if(addedExpand===false){
+            content.push(
+                <span 
+                    key="EXPAND"
+                    className={"glyphicon glyphicon-plus treeview-header-button"} 
+                    title={"Expand All"}
+                    onClick={this.expand}
+                />
+            );
+            addedExpand=true;
+        }
+        if(addedContract===false){
+            content.push(
+                <span 
+                    key="CONTRACT"
+                    className={"glyphicon glyphicon-minus treeview-header-button"} 
+                    title={"Collapse All"}
+                    onClick={this.collapse}
+                />
+            );
+            addedContract=true;
+        }
 
-        content.push(
-            <span 
-                key="CONTRACT"
-                className={"glyphicon glyphicon-minus treeview-header-button"} 
-                title={"Collapse All"}
-                onClick={this.collapse}
-            />
-        );
         
+        /*
         if(this.outcomes["OnBack"]) {
             content.push(
                 <span 
@@ -357,6 +366,7 @@ export default class TreeView extends FlowComponent {
                 />
             );
         }
+        */
         return content;
     }
 
