@@ -36,8 +36,8 @@ Any outcome attached to the component is dealt with in this way: -
 * If the outcome has its "When this outcome is selected" option set to either "Save Changes" or "Partially Save Changes" and is attached 
 to a tree node then the current node is set as the state value when triggered.
 
-* If the outcome has an "icon" attribute then this value is used to specify the icon, otherwist a default "+" icon is used.  Icons are 
-bootstrap glyphicons without the "glyphicon-" prefix.
+* If the outcome has an "icon" attribute then this value is used to specify the icon, otherwise a default "+" icon is used.  Note: Icons are 
+bootstrap glyphicons without the "glyphicon-" prefix e.g. "trash","edit" etc.
 
 * If the outcome has a "Label" set then this is used as the tooltip otherwise the outcome's name is used.
 
