@@ -1,0 +1,36 @@
+.cm {
+    box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
+    position: fixed;
+    display: none;
+    background-color: #fefefe;
+    border-radius: 10px;
+    border: 2px solid #033d58;
+    pointer-events: all;
+    z-index: 100000;
+}
+
+.cm-list {
+    list-style: none;
+    padding: 10px;
+    margin: 0;
+}
+
+.cm-item {
+    font-weight: 500;
+    font-size: 18px;
+    padding: 10px 10px 10px 10px;
+    cursor: pointer;
+    color: #033d58;
+    border-radius: 10px;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.cm-item:hover {
+    color: #033d58;
+    background-color: #ddd;
+}
+
+.cm-item-icon {
+    margin-right: 10px;
+}

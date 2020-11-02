@@ -1,5 +1,6 @@
 import { FlowOutcome } from 'flow-component-model';
 import React from 'react';
+import ContextMenu from './ContextMenu/ContextMenu';
 import TreeView from './TreeView';
 import TreeViewItem from './TreeViewItem';
 
@@ -21,31 +22,39 @@ export default class TreeViewNode extends React.Component<any, any> {
     showContextMenu(e: any) {
         e.preventDefault();
         e.stopPropagation();
-        const left: number = e.clientX;
-        const top: number = e.clientY;
         const root: TreeView = this.props.root;
-
+        const node: TreeViewItem = this.props.node; 
+        let listItems: Map<string , any> = new Map();
+        if(this.contextMenu) {
+            Object.keys(root.outcomes).forEach((key: string) => {
+                const outcome: FlowOutcome = root.outcomes[key];
+                if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect" && outcome.developerName.toLowerCase().startsWith("cm")) {
+                    listItems.set(outcome.developerName,(
+                        <li 
+                            className="cm-item"
+                            title={outcome.label || key}
+                            onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node)}}
+                        >
+                            <span
+                                className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " cm-item-icon"} />
+                            <span
+                                className={"cm-item-label"}
+                            >
+                                {outcome.label || key}
+                            </span>
+                        </li>
+                    ));
+                }
+            });
+            this.contextMenu.show(e.clientX, e.clientY,listItems);   
+            this.forceUpdate();
+        }
     }
 
     async hideContextMenu() {
-        const root: TreeView = this.props.root;
-
-        //if(root.roleFunctions.has("edit_queues") === true) {
-            this.contextMenu.style.left = "0px";
-            this.contextMenu.style.top = "0px";
-            this.contextMenu.style.display = "none";
-            this.forceUpdate();
-        //}
+        this.contextMenu.hide();
     }
 
-    expandAll() {
-
-    }
-
-    collapseAll() {
-        
-    }
-    
     render() {
         let expander: any;
         let content: any;
@@ -82,7 +91,7 @@ export default class TreeViewNode extends React.Component<any, any> {
 
         Object.keys(root.outcomes).forEach((key: string) => {
             const outcome: FlowOutcome = root.outcomes[key];
-            if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect") {
+            if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect" && !outcome.developerName.toLowerCase().startsWith("cm")) {
                 buttons.push(
                     <span 
                         key={key}
@@ -93,13 +102,20 @@ export default class TreeViewNode extends React.Component<any, any> {
                 );
             }
         });
+
+        let contextMenu = (
+            <ContextMenu 
+                parent={this}
+                ref={(element: ContextMenu) => {this.contextMenu=element}}
+            />
+        );
         
         return( 
             <div
                 className="treeview-node"
                 style={{paddingLeft: (node.itemLevel * 20) + "px"}}
-                onContextMenu={this.showContextMenu}
                 title={node.itemDescription}
+                onContextMenu={(e: any) => {e.preventDefault()}}
             >
                 <div 
                     className = "treeview-node-title"
@@ -120,7 +136,9 @@ export default class TreeViewNode extends React.Component<any, any> {
                         onDragOver={(e) => {root.onDragOver(e); }}
                         onDrop={(e) => {root.onDrop(e); }}
                         data-node={node.itemId}
+                        onContextMenu={this.showContextMenu}
                     >
+                        {contextMenu}
                         <div
                             className="treeview-node-icons"
                         >

@@ -5,6 +5,7 @@ import './css/treeview.css';
 import { MessageBox } from './MessageBox/MessageBox';
 import TreeViewNode from './TreeViewNode';
 import TreeViewItem from './TreeViewItem';
+import ContextMenu from './ContextMenu/ContextMenu';
 
 //declare const manywho: IManywho;
 declare const manywho: any;
@@ -40,6 +41,8 @@ export default class TreeView extends FlowComponent {
     msgboxOnClose: any;
 
     draggedNode: string;
+
+    contextMenu: any;
    
     async showDialog(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
         this.dialogVisible = true;
@@ -98,6 +101,8 @@ export default class TreeView extends FlowComponent {
         this.expand = this.expand.bind(this);
         this.collapse = this.collapse.bind(this);
         this.setNode = this.setNode.bind(this);
+        this.showContextMenu = this.showContextMenu.bind(this);
+        this.hideContextMenu = this.hideContextMenu.bind(this);  
 
         let dbl: number = parseInt(this.getAttribute("DebugLevel","0"));
               this.debugLevel = dbl || eDebugLevel.error ;
@@ -343,30 +348,6 @@ export default class TreeView extends FlowComponent {
             );
             addedContract=true;
         }
-
-        
-        /*
-        if(this.outcomes["OnBack"]) {
-            content.push(
-                <span 
-                    key="BACK"
-                    className={"glyphicon glyphicon-" + (this.outcomes["OnRefresh"].attributes["icon"]?.value || "arrow-left") + " treeview-header-button"} 
-                    title={this.outcomes["OnBack"].label}
-                    onClick={this.back}
-                />
-            );
-        }
-        if(this.outcomes["OnRefresh"]) {
-            content.push(
-                <span 
-                    key="REFRESH"
-                    className={"glyphicon glyphicon-" + (this.outcomes["OnRefresh"].attributes["icon"]?.value || "refresh") + " treeview-header-button" }
-                    title={this.outcomes["OnRefresh"].label}
-                    onClick={this.refresh}
-                />
-            );
-        }
-        */
         return content;
     }
 
@@ -460,6 +441,40 @@ export default class TreeView extends FlowComponent {
 
         return elements;
     }
+
+    showContextMenu(e: any) {
+        e.preventDefault();
+        e.stopPropagation();
+        let listItems: Map<string , any> = new Map();
+        if(this.contextMenu) {
+            Object.keys(this.outcomes).forEach((key: string) => {
+                const outcome: FlowOutcome = this.outcomes[key];
+                if (outcome.isBulkAction === true && outcome.developerName !== "OnSelect" && outcome.developerName.toLowerCase().startsWith("cm")) {
+                    listItems.set(outcome.developerName,(
+                        <li 
+                            className="cm-item"
+                            title={outcome.label || key}
+                            onClick={(e: any) => {e.stopPropagation(); this.doOutcome(key, undefined)}}
+                        >
+                            <span
+                                className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " cm-item-icon"} />
+                            <span
+                                className={"cm-item-label"}
+                            >
+                                {outcome.label || key}
+                            </span>
+                        </li>
+                    ));
+                }
+            });
+            this.contextMenu.show(e.clientX, e.clientY,listItems);   
+            this.forceUpdate();
+        }
+    }
+
+    async hideContextMenu() {
+        this.contextMenu.hide();
+    }
     
 
     render() {
@@ -495,6 +510,13 @@ export default class TreeView extends FlowComponent {
             );
         }
 
+        let contextMenu = (
+            <ContextMenu 
+                parent={this}
+                ref={(element: ContextMenu) => {this.contextMenu=element}}
+            />
+        );
+
         //handle classes attribute and hidden and size
         let classes: string = "treeview " + this.getAttribute("classes","");
         let style: CSSProperties = {};
@@ -516,7 +538,9 @@ export default class TreeView extends FlowComponent {
             <div
                 className={classes}
                 style={style}
+                onContextMenu={this.showContextMenu}
             >
+                {contextMenu}
                 {modal}
                 {msgbox}
                 <div
