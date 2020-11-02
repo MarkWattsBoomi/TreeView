@@ -85,7 +85,7 @@ export default class TreeViewNode extends React.Component<any, any> {
         }
 
         let selectedClass: string = "";
-        if(node.itemId === (root.selectedNode ? root.selectedNode.itemId : -1)) {
+        if(node.itemId === (root.selectedNodeId ? root.selectedNodeId : "-1")) {
             selectedClass = " treeview-node-item-selected";
         }
 

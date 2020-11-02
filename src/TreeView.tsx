@@ -1,6 +1,6 @@
 import React, { CSSProperties } from 'react';
 
-import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType } from 'flow-component-model';
+import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType } from 'flow-component-model';
 import './css/treeview.css';
 import { MessageBox } from './MessageBox/MessageBox';
 import TreeViewNode from './TreeViewNode';
@@ -22,7 +22,7 @@ export default class TreeView extends FlowComponent {
     context: any;
     debugLevel: eDebugLevel = eDebugLevel.error;
 
-    selectedNode: TreeViewItem;
+    selectedNodeId: string;
     nodeTree: Map<string,TreeViewItem>;
     nodeElementTree: Array<any>;
     treeViewNodes: Map<string,TreeViewNode> = new Map();
@@ -92,11 +92,7 @@ export default class TreeView extends FlowComponent {
         this.hideMessageBox = this.hideMessageBox.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
         this.convertNode = this.convertNode.bind(this);
-        //this.nodeSelect = this.nodeSelect.bind(this);
-        //this.nodeEdit = this.nodeEdit.bind(this);
-        //this.nodeDelete = this.nodeDelete.bind(this);
-        //this.refresh = this.refresh.bind(this);
-        //this.back = this.back.bind(this);
+        this.flowMoved = this.flowMoved.bind(this);
         this.doOutcome = this.doOutcome.bind(this);
         this.expand = this.expand.bind(this);
         this.collapse = this.collapse.bind(this);
@@ -115,17 +111,28 @@ export default class TreeView extends FlowComponent {
         }
     }
 
+    async flowMoved(msg: any) {
+        this.forceUpdate();
+        const state: any = this.getStateValue();
+        this.selectedNodeId = state?.properties["ITEM_ID"]?.value as string + "";
+    }
+
     async componentDidMount() {
         //will get this from a component attribute
         await super.componentDidMount();
+        (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
         // build tree
         this.buildTreeFromModel(this.model.dataSource.items);
+        
+        const state: any = this.getStateValue();
+        this.selectedNodeId = state?.properties["ITEM_ID"]?.value as string + "";
         this.forceUpdate();
     }
 
     async componentWillUnmount() {
         await super.componentWillUnmount();
-        this.debug("unmount workflow", eDebugLevel.verbose);
+        (manywho as any).eventManager.removeDoneListener(this.componentId);
+        this.debug("unmount treeview", eDebugLevel.verbose);
     }
 
     setNode(key: string, element: TreeViewNode) {
@@ -145,19 +152,32 @@ export default class TreeView extends FlowComponent {
             let targettype: string = this.model.dataSource.items[0].developerName;
             result = FlowObjectData.newInstance(targettype);
             Object.values(source.properties).forEach((prop: FlowObjectDataProperty) => {
-                result.addProperty(prop);
+                if(prop.contentType !== eContentType.ContentObject && prop.contentType !== eContentType.ContentList) {
+                    result.addProperty(FlowObjectDataProperty.newInstance(prop.developerName, prop.contentType,prop.value));
+                }
             });
         }
         return result;
     }
 
-    async doOutcome(outcomeName: string, node: any) {
-        if(this.outcomes[outcomeName].pageActionBindingType !== ePageActionBindingType.NoSave && node) {
-            await this.setStateValue(this.convertNode(node.objectData))
-            this.selectedNode = node;
+    async doOutcome(outcomeName: string, node: TreeViewItem) {
+        if(outcomeName.toLowerCase() === "onselect" || 
+            (this.outcomes[outcomeName].pageActionBindingType !== ePageActionBindingType.NoSave 
+                && node )) 
+        {
+            const convertedNode: FlowObjectData = this.convertNode(node.objectData);
+            await this.setStateValue(convertedNode);
+
+
+            this.selectedNodeId = node.itemId + "";
             this.forceUpdate();
+            if(outcomeName.toLowerCase() === "onselect") {
+                if(this.outcomes[outcomeName]) {
+                    await this.triggerOutcome(outcomeName);
+                } 
+            }
         }
-        if(this.outcomes[outcomeName]) {
+        if(this.outcomes[outcomeName] && outcomeName.toLowerCase() !== "onselect") {
             await this.triggerOutcome(outcomeName);
         }
     }
@@ -169,6 +189,9 @@ export default class TreeView extends FlowComponent {
             node.expanded=true;
             node.forceUpdate();
         });
+        const state: any = this.getStateValue();
+        this.selectedNodeId = state?.properties["ITEM_ID"]?.value as string + "";
+        this.forceUpdate();
     }
 
     async collapse() {
@@ -218,18 +241,6 @@ export default class TreeView extends FlowComponent {
     onDragEnter(e: any) {
         e.preventDefault();
         e.stopPropagation();
-        /*
-        const potentialParent = e.currentTarget.getAttribute("data-node");
-        const permissableTarget: boolean = this.isPermissableTargetQueue(this.draggedNode,potentialParent);
-        if(!permissableTarget) {
-            e.dataTransfer.dropEffect="none"; 
-            e.currentTarget.classList.add("cannot-drop");
-        }
-        else {
-            e.dataTransfer.dropEffect="move";
-            e.currentTarget.classList.add("can-drop");
-        }
-        */
     }
 
     onDragLeave(e: any) {
@@ -315,7 +326,7 @@ export default class TreeView extends FlowComponent {
                 );
                 addedContract=true;
             }
-            if (outcome.isBulkAction) {
+            if (outcome.isBulkAction && outcome.developerName !== "OnSelect" && !outcome.developerName.toLowerCase().startsWith("cm")) {
                 content.push(
                     <span 
                         key={key}
@@ -365,7 +376,7 @@ export default class TreeView extends FlowComponent {
             }
             let node = new TreeViewItem();
             node.itemLevel = 0;
-            node.itemId = item.properties["ITEM_ID"].value as string;
+            node.itemId = item.properties["ITEM_ID"].value as string + "";
             node.itemName = item.properties["ITEM_NAME"].value as string;
             node.itemDescription = item.properties["ITEM_DESCRIPTION"].value as string;
             node.itemStatus = item.properties["ITEM_STATUS"].value as string;
@@ -388,7 +399,7 @@ export default class TreeView extends FlowComponent {
 
             let node = new TreeViewItem();
             node.itemLevel = level;
-            node.itemId = item.properties["ITEM_ID"].value as string;
+            node.itemId = item.properties["ITEM_ID"].value as string + "";
             node.itemName = item.properties["ITEM_NAME"].value as string;
             node.itemDescription = item.properties["ITEM_DESCRIPTION"].value as string;
             node.itemStatus = item.properties["ITEM_STATUS"].value as string;
