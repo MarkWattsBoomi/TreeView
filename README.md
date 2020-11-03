@@ -22,9 +22,7 @@ Set the datasource to a list of ITEM objects
 
 # State
 
-Create a State object of the type of the root level nodes.
-
-Note: If the types in the tree vary due to a Flow Service naming issue don't worry.  The Tree will convert any triggering node to the type of the root tree items before setting the state value
+Create a State object of the type of the model data items.
 
 
 # Outcomes
@@ -92,7 +90,7 @@ The component respects the show / hide rules applied by the containing page.
 
 # Data Model
 
-The component requires a specific type structure which you must generate.
+The component requires a list of items of a specific type structure which you must generate.
 
 The actual names of the types in flow doesn't matter but the attribute names must be adhered to.
 
@@ -109,6 +107,11 @@ You can have other attributes but the tree doesn't use them.
         {
             "contentType": "ContentNumber",
             "developerName": "ITEM_ID",
+            "id": null,
+        },
+        {
+            "contentType": "ContentNumber",
+            "developerName": "PARENT_ID",
             "id": null,
         },
         {
@@ -136,47 +139,5 @@ You can have other attributes but the tree doesn't use them.
             "developerName": "IS_LOCKED",
             "id": null,
         },
-        {
-            "contentFormat": null,
-            "contentType": "ContentList",
-            "developerName": "CHILDREN",
-            "id": null,
-            "typeElementDeveloperName": "ITEM"
-        },
-        {
-            "contentType": "ContentList",
-            "developerName": "ATTRIBUTES",
-            "id": null,
-            "typeElementDeveloperName": "ITEM_ATTRIBUTE,
-        }
     ]
 }
-
-{
-    "developerName": "ITEM_ATTRIBUTE",
-    "developerSummary": "An attribute of the item",
-    "elementType": "TYPE",
-    "id": null,
-        "properties": [
-            {
-                "contentType": "ContentNumber",
-                "developerName": "ATTRIBUTE_ID",
-                "id": null
-            },
-            {
-                "contentType": "ContentString",
-                "developerName": "ATTRIBUTE_NAME",
-                "id": null
-            },
-            {
-                "contentType": "ContentString",
-                "developerName": "ATTRIBUTE_DESCRIPTION",
-                "id": null
-            },
-            {
-                "contentType": "ContentString",
-                "developerName": "ATTRIBUTE_VALUE",
-                "id": null
-            }
-        ]
-    }

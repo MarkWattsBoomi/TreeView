@@ -22,8 +22,8 @@ export default class TreeView extends FlowComponent {
     context: any;
     debugLevel: eDebugLevel = eDebugLevel.error;
 
-    selectedNodeId: string;
-    nodeTree: Map<string,TreeViewItem>;
+    selectedNodeId: number;
+    nodeTree: Map<number,TreeViewItem>;
     nodeElementTree: Array<any>;
     treeViewNodes: Map<string,TreeViewNode> = new Map();
 
@@ -112,9 +112,11 @@ export default class TreeView extends FlowComponent {
     }
 
     async flowMoved(msg: any) {
-        this.forceUpdate();
+        
+        this.buildTreeFromModel(this.model.dataSource.items,0);
         const state: any = this.getStateValue();
-        this.selectedNodeId = state?.properties["ITEM_ID"]?.value as string + "";
+        this.selectedNodeId = state?.properties["ITEM_ID"]?.value as number;
+        this.forceUpdate();
     }
 
     async componentDidMount() {
@@ -122,10 +124,10 @@ export default class TreeView extends FlowComponent {
         await super.componentDidMount();
         (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
         // build tree
-        this.buildTreeFromModel(this.model.dataSource.items);
+        this.buildTreeFromModel(this.model.dataSource.items,0);
         
         const state: any = this.getStateValue();
-        this.selectedNodeId = state?.properties["ITEM_ID"]?.value as string + "";
+        this.selectedNodeId = state?.properties["ITEM_ID"]?.value as number;
         this.forceUpdate();
     }
 
@@ -169,7 +171,7 @@ export default class TreeView extends FlowComponent {
             await this.setStateValue(convertedNode);
 
 
-            this.selectedNodeId = node.itemId + "";
+            this.selectedNodeId = node.itemId;
             this.forceUpdate();
             if(outcomeName.toLowerCase() === "onselect") {
                 if(this.outcomes[outcomeName]) {
@@ -189,9 +191,6 @@ export default class TreeView extends FlowComponent {
             node.expanded=true;
             node.forceUpdate();
         });
-        const state: any = this.getStateValue();
-        this.selectedNodeId = state?.properties["ITEM_ID"]?.value as string + "";
-        this.forceUpdate();
     }
 
     async collapse() {
@@ -367,28 +366,76 @@ export default class TreeView extends FlowComponent {
     ///////////////////////////////////////////////////////////////////
     // constructs a map of TreeViewItems from the model datasource data
     ///////////////////////////////////////////////////////////////////
-    buildTreeFromModel(items : FlowObjectData[]){
+    buildTreeFromModel(items : FlowObjectData[], level: number){
         this.nodeTree = new Map();
+        
         items.forEach((item: FlowObjectData) => {
-            let childNodes : Map<string,TreeViewItem> = new Map();
-            if(item.properties["CHILDREN"]) {
-                childNodes = this.buildNodes(item.properties["CHILDREN"].value as FlowObjectDataArray, 1);
-            }
+            //construct TreeViewItem
             let node = new TreeViewItem();
-            node.itemLevel = 0;
-            node.itemId = item.properties["ITEM_ID"].value as string + "";
+            node.itemLevel = level;
+            node.itemId = item.properties["ITEM_ID"].value as number;
+            node.parentId = item.properties["PARENT_ID"]?.value as number
             node.itemName = item.properties["ITEM_NAME"].value as string;
             node.itemDescription = item.properties["ITEM_DESCRIPTION"].value as string;
             node.itemStatus = item.properties["ITEM_STATUS"].value as string;
-            node.children = childNodes;
+            node.children = new Map();
             node.objectData = item;
-            this.nodeTree.set(item.properties["ITEM_ID"].value as string, node);
+
+            //these could be in any order
+
+            //if it has no parent id then it's a root item - directly add it to the tree
+            if(!node.parentId || node.parentId<=0){
+                this.nodeTree.set(node.itemId, node);
+            }
+            else {
+                node.parentId=-1;
+                let parent = this.findTreeNode(this.nodeTree,node.parentId)
+                if(parent) {
+                    node.setItemLevel(parent.itemLevel + 1);
+                    parent.children.set(node.itemId, node);
+                }
+                else {
+                    // my parent isn't in tree yet, just add me at root
+                    node.setItemLevel(level);
+                    this.nodeTree.set(node.itemId, node);
+                }
+            }
+        });
+
+        // now all items are in tree re-iterate looking for parents
+        this.nodeTree.forEach((topLevel: TreeViewItem) => {
+            //we wont do this if the top level has a 0 or -1 parent id or the parent id= itme id
+            let parent = this.findTreeNode(this.nodeTree,topLevel.parentId)
+            if(parent && !(parent.itemId===topLevel.itemId)) {
+                topLevel.setItemLevel(parent.itemLevel + 1);
+                parent.children.set(topLevel.itemId, topLevel);
+                this.nodeTree.delete(topLevel.itemId);
+            }
         });
     }
 
+    findTreeNode(nodes: Map<number, TreeViewItem>, nodeId: number) : TreeViewItem | undefined{
+        //make sure there's a tree
+        let parent: any = undefined;
+        if(nodes) {
+            nodes.forEach((item: TreeViewItem) => {
+                if(!parent) {
+                    if(item.itemId === nodeId) {
+                        parent=item;
+                    }
+                    else {
+                        parent = this.findTreeNode(item.children,nodeId);
+                    }
+                }
+            });
+        }
+        return parent;
+    }
+
+    /*
     buildNodes(items : FlowObjectDataArray, level: number) : Map<string,TreeViewItem>{
         let nodes: Map<string,TreeViewItem> = new Map(); 
-                
+               
         items.items.forEach((item: FlowObjectData) => {
                        
             let childNodes : Map<string,TreeViewItem> = new Map();
@@ -410,29 +457,33 @@ export default class TreeView extends FlowComponent {
 
         return nodes;
     }
+    */
 
     //////////////////////////////////////////////////////////////
     // Constructs a react component tree from the TreeViewItem map
     //////////////////////////////////////////////////////////////
-    buildTree() {
-        this.nodeElementTree = [];
-
-        this.nodeTree?.forEach((node: TreeViewItem) => {
-            let children: Array<any> = this.makeChildNodes(node.itemId + "", node.children);
-            this.nodeElementTree.push(
-                <TreeViewNode 
-                    key={node.itemId}
-                    root={this}
-                    node={node}
-                    parent={undefined}
-                    children={children}
-                    allowRearrange={!this.model.readOnly}
-                    ref={(element: TreeViewNode) => {this.setNode(node.itemId + "",element)}}
-                />
-            );
-        });
+    buildTree(nodes: Map<number, TreeViewItem>) : Array<any>{
+        const elements: Array<any> = [];
+        if(nodes) {
+            nodes.forEach((node: TreeViewItem) => {
+                let children: Array<any> = this.buildTree(node.children);
+                elements.push(
+                    <TreeViewNode 
+                        key={node.itemId}
+                        root={this}
+                        node={node}
+                        parent={undefined}
+                        children={children}
+                        allowRearrange={!this.model.readOnly}
+                        ref={(element: TreeViewNode) => {this.setNode(node.itemId + "",element)}}
+                    />
+                );
+            });
+        }
+        return elements;
     }
 
+    /*
     makeChildNodes(parentId: string, nodes: Map<string,TreeViewItem>) : Array<any> {
         let elements: Array<any> = [];
         nodes.forEach((node: TreeViewItem) => {
@@ -452,6 +503,7 @@ export default class TreeView extends FlowComponent {
 
         return elements;
     }
+    */
 
     showContextMenu(e: any) {
         e.preventDefault();
@@ -489,7 +541,7 @@ export default class TreeView extends FlowComponent {
     
 
     render() {
-        this.buildTree();
+        
         if(this.loadingState !== eLoadingState.ready) {
             return (
                 <div></div>
@@ -527,6 +579,9 @@ export default class TreeView extends FlowComponent {
                 ref={(element: ContextMenu) => {this.contextMenu=element}}
             />
         );
+
+        //construct tree REACT elements
+        this.nodeElementTree = this.buildTree(this.nodeTree);
 
         //handle classes attribute and hidden and size
         let classes: string = "treeview " + this.getAttribute("classes","");
