@@ -1,7 +1,9 @@
-import { FlowOutcome } from 'flow-component-model';
-import React from 'react';
+import { FlowOutcome, ModalDialog, modalDialogButton } from 'flow-component-model';
+import React, { CSSProperties } from 'react';
 import ContextMenu from './ContextMenu/ContextMenu';
-import TreeView from './TreeView';
+import ItemInfo from './Dialogs/ItemInfo';
+import { MessageBox } from './MessageBox/MessageBox';
+import TreeView, { eDebugLevel } from './TreeView';
 import TreeViewItem from './TreeViewItem';
 
 export default class TreeViewNode extends React.Component<any, any> {
@@ -9,41 +11,117 @@ export default class TreeViewNode extends React.Component<any, any> {
     canvas: any;
     contextMenu: any;
 
-    expanded: boolean = true;
+    msgboxVisible: boolean = false;
+    msgboxTitle: string = '';
+    msgboxButtons: any = [];
+    msgboxContent: any;
+    msgboxOnClose: any;
+
+    dialogVisible: boolean = false;
+    dialogTitle: string = '';
+    dialogButtons: any = [];
+    dialogContent: any;
+    dialogOnClose: any;
+    dialogForm: any;
+
+    expanded: boolean = false;
     
     constructor(props: any) {
         super(props);
         this.showContextMenu = this.showContextMenu.bind(this);
         this.hideContextMenu = this.hideContextMenu.bind(this);   
+        this.showMessageBox = this.showMessageBox.bind(this);
+        this.hideMessageBox = this.hideMessageBox.bind(this);
+        this.showDialog = this.showDialog.bind(this);
+        this.hideDialog = this.hideDialog.bind(this);
+        this.showInfo = this.showInfo.bind(this);
+        this.expanded = this.props.expanded || false;
     }
 
+    componentDidUpdate() {
+        
+    }
+
+    componentDidMount() {
+        const root: TreeView = this.props.root;
+        if(root.expansionPath.indexOf(this.props.nodeId) >= 0)
+        {
+            this.expanded = true;
+            this.forceUpdate();
+        }
+    }
     
+    async showMessageBox(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
+        this.msgboxVisible = true;
+        this.msgboxTitle = title;
+        this.msgboxContent = content;
+        this.msgboxOnClose = onClose;
+        this.msgboxButtons = buttons;
+        return this.forceUpdate();
+    }
+
+    async hideMessageBox() {
+        this.msgboxVisible = false;
+        this.msgboxTitle = '';
+        this.msgboxContent = undefined;
+        this.msgboxOnClose = undefined;
+        this.msgboxButtons = [];
+        return this.forceUpdate();
+    }
+
+    async showDialog(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
+        this.dialogVisible = true;
+        this.dialogTitle = title;
+        this.dialogContent = content;
+        this.dialogOnClose = onClose;
+        this.dialogButtons = buttons;
+        return this.forceUpdate();
+    }
+
+    async hideDialog() {
+        this.dialogVisible = false;
+        this.dialogTitle = '';
+        this.dialogContent = undefined;
+        this.dialogOnClose = undefined;
+        this.dialogButtons = [];
+        this.dialogForm = undefined;
+        return this.forceUpdate();
+    }
 
     showContextMenu(e: any) {
         e.preventDefault();
         e.stopPropagation();
         const root: TreeView = this.props.root;
-        const node: TreeViewItem = this.props.node; 
+        const node: TreeViewItem = root.findTreeNode(root.nodeTree,this.props.nodeId); 
+
+        let lowestLevel: boolean = node.children.size===0;
+
         let listItems: Map<string , any> = new Map();
         if(this.contextMenu) {
             Object.keys(root.outcomes).forEach((key: string) => {
                 const outcome: FlowOutcome = root.outcomes[key];
                 if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect" && outcome.developerName.toLowerCase().startsWith("cm")) {
-                    listItems.set(outcome.developerName,(
-                        <li 
-                            className="cm-item"
-                            title={outcome.label || key}
-                            onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node)}}
-                        >
-                            <span
-                                className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " cm-item-icon"} />
-                            <span
-                                className={"cm-item-label"}
+                    let showOutcome: boolean = true;
+                    if(outcome.attributes["LowestOnly"]?.value.toLowerCase() === "true" && !lowestLevel){
+                        showOutcome=false;
+                    }
+                    if(showOutcome){
+                        listItems.set(outcome.developerName,(
+                            <li 
+                                className="cm-item"
+                                title={outcome.label || key}
+                                onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node)}}
                             >
-                                {outcome.label || key}
-                            </span>
-                        </li>
-                    ));
+                                <span
+                                    className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " cm-item-icon"} />
+                                <span
+                                    className={"cm-item-label"}
+                                >
+                                    {outcome.label || key}
+                                </span>
+                            </li>
+                        ));
+                    }
                 }
             });
             this.contextMenu.show(e.clientX, e.clientY,listItems);   
@@ -55,6 +133,18 @@ export default class TreeViewNode extends React.Component<any, any> {
         this.contextMenu.hide();
     }
 
+    showInfo() {
+        const root: TreeView = this.props.root;
+        const node: TreeViewItem = root.findTreeNode(root.nodeTree,this.props.nodeId); 
+        let content: any = (
+            <ItemInfo
+                item={node}
+                display={root.model.displayColumns}
+            />
+        );
+        this.showDialog(node.itemName,content,this.hideDialog,[new modalDialogButton("Close",this.hideDialog)])
+    }
+
     render() {
         let expander: any;
         let content: any;
@@ -62,8 +152,9 @@ export default class TreeViewNode extends React.Component<any, any> {
 
         let buttons: Array<any> = [];
         const root: TreeView = this.props.root;
-        const node: TreeViewItem = this.props.node; 
-        
+        const node: TreeViewItem = root.findTreeNode(root.nodeTree,this.props.nodeId); 
+        //const parentItem: TreeViewItem = root.findTreeNode(root.nodeTree,this.props.parentId); 
+        //const parent = root.getNode(this.props.parentId);
         //set the queue icon
         icon=node.itemIcon || "envelope";
         
@@ -89,17 +180,25 @@ export default class TreeViewNode extends React.Component<any, any> {
             selectedClass = " treeview-node-item-selected";
         }
 
+        let lowestLevel: boolean = node.children.size===0;
+
         Object.keys(root.outcomes).forEach((key: string) => {
             const outcome: FlowOutcome = root.outcomes[key];
             if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect" && !outcome.developerName.toLowerCase().startsWith("cm")) {
-                buttons.push(
-                    <span 
-                        key={key}
-                        className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " treeview-node-button"} 
-                        title={outcome.label || key}
-                        onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node)}}
-                    />
-                );
+                let showOutcome: boolean = true;
+                if(outcome.attributes["LowestOnly"]?.value.toLowerCase() === "true" && !lowestLevel){
+                    showOutcome=false;
+                }
+                if(showOutcome){
+                    buttons.push(
+                        <span 
+                            key={key}
+                            className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " treeview-node-button"} 
+                            title={outcome.label || key}
+                            onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node)}}
+                        />
+                    );
+                }
             }
         });
 
@@ -109,11 +208,53 @@ export default class TreeViewNode extends React.Component<any, any> {
                 ref={(element: ContextMenu) => {this.contextMenu=element}}
             />
         );
+
+        let modal: any;
+        if (this.dialogVisible === true) {
+            modal = (
+                <ModalDialog
+                    title={this.dialogTitle}
+                    buttons={this.dialogButtons}
+                    onClose={this.dialogOnClose}
+                >
+                    {this.dialogContent}
+                </ModalDialog>
+            );
+        }
+
+        let msgbox: any;
+        if (this.msgboxVisible === true) {
+            msgbox = (
+                <MessageBox
+                    title={this.msgboxTitle}
+                    buttons={this.msgboxButtons}
+                    onClose={this.msgboxOnClose}
+                >
+                    {this.msgboxContent}
+                </MessageBox>
+            );
+        }
+
+        let label: string = node.itemName;
+        if(root.debugLevel >= eDebugLevel.info) {
+            label += " (" + node.itemId + ") (" + node.parentId + ")"
+        }
+
+        let style: CSSProperties = {};
+        style.paddingLeft="10px";
+        //style.visibility="hidden";
+        //style.height="0px";
+
+        //if my parent is expanded then show me 
+        //if(!parent || parent?.expanded===true) {
+        //    style.visibility="visible";
+//style.height="auto";
+        //}
         
         return( 
             <div
                 className="treeview-node"
-                style={{paddingLeft: (node.itemLevel * 20) + "px"}}
+                style={style}
                 title={node.itemDescription}
                 onContextMenu={(e: any) => {e.preventDefault()}}
             >
@@ -130,7 +271,7 @@ export default class TreeViewNode extends React.Component<any, any> {
                         onClick={(e: any) => {root.doOutcome("OnSelect",node)}}
                         title={node.itemDescription}
                         draggable={this.props.allowRearrange}
-                        onDragStart={(e) => {root.onDrag(e,node.itemId + ""); }}
+                        onDragStart={(e) => {root.onDrag(e,node.itemId); }}
                         onDragEnter={(e) => {root.onDragEnter(e); }}
                         onDragLeave={(e) => {root.onDragLeave(e); }}
                         onDragOver={(e) => {root.onDragOver(e); }}
@@ -138,6 +279,8 @@ export default class TreeViewNode extends React.Component<any, any> {
                         data-node={node.itemId}
                         onContextMenu={this.showContextMenu}
                     >
+                        {modal}
+                        {msgbox}
                         {contextMenu}
                         <div
                             className="treeview-node-icons"
@@ -145,11 +288,15 @@ export default class TreeViewNode extends React.Component<any, any> {
                             <span 
                                 className={"glyphicon glyphicon-" + icon + " treeview-node-icon"}
                             />
+                            <span 
+                                className={"glyphicon glyphicon-info-sign treeview-node-button"}
+                                onClick={(e: any) => {e.stopPropagation(); this.showInfo(); root.doOutcome("OnInfo", node)}}
+                            />
                         </div>
                         <div
                             className = "treeview-node-label"
                         >
-                            {node.itemName}
+                            {label}
                         </div>
                         <div
                             className="treeview-node-icons"
@@ -171,5 +318,4 @@ export default class TreeViewNode extends React.Component<any, any> {
         this.expanded = !this.expanded;
         this.forceUpdate();
     }
-
 }

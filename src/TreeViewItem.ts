@@ -8,6 +8,7 @@ export default class TreeViewItem {
     itemIcon: string = "";
     itemStatus: string = "";
     itemLevel: number = 0;
+    itemType: string = "";
     children: Map<number,TreeViewItem> = new Map();
     objectData: FlowObjectData;
 

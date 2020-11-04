@@ -49,6 +49,11 @@ bootstrap glyphicons without the "glyphicon-" prefix e.g. "trash","edit" etc.
 
 * The expand and contract default buttons in the title bar are given order 10 & 20 respectively to allow for controlling button display order and injecting your outcome around them.
 
+# Outcome Attributes
+
+## LowestOnly
+
+If present and set to "true" then only the lowest level tree nodes will show buttons or context menu items for this outcome
 
 
 # Settings
@@ -67,15 +72,23 @@ Sets wether drag and drop of nodes is enabled.
 
 
 
-# Attributes
-
-## EditLowest
-
-If set to true then only the lowest level nodes will show buttons for edit & delete
+# Component Attributes
 
 ## classes
 
 Like all components, adding a "classes" attribute will cause that string to be added to the base component's class value
+
+## DebugLevel
+
+Setting this enables extra output in the console and on screen.  It's a number,  error = 0, warning = 1, info = 2, verbose = 3
+
+info / 2 for example will display the node's id & parent in the tree
+
+## ShowInfo
+
+Setting this attribute to "true" will show an info icon beside the node which when clicked displays a modal dialog with the node's details in it.
+
+The displayed details are configured in the Data Presentation settings of the page element.
 
 
 # Styling
@@ -141,3 +154,4 @@ You can have other attributes but the tree doesn't use them.
         },
     ]
 }
+
