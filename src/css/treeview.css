@@ -16,6 +16,7 @@
 .treeview-header-title-wrapper {
     display: flex;
     flex-direction: row;
+    flex-grow: 1;
 }
 
 .treeview-header-title {
@@ -31,10 +32,44 @@
     user-select: none;
 }
 
-.treeview-header-buttons {
-    margin-left: auto;
+.treeview-header-search {
     display: flex;
     flex-direction: row;
+    background-color: #fefefe;
+    flex-grow: 0;
+    margin-right: 30px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.treeview-header-search-input {
+    font-size: 18px !important;
+    line-height: 1 !important;
+    color: #033d58 !important;
+    border: none !important;
+    background-color: transparent !important;
+}
+
+.treeview-header-search-button {
+    font-size: 18px;
+    margin: 0;
+    color: #033d58;
+    align-self: center;
+    top: 0 !important;
+    margin: auto;
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+.treeview-header-search-button:hover {
+    color: #ff7c66;
+    cursor: pointer;
+}
+
+.treeview-header-buttons {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
 }
 
 @keyframes rotation {
@@ -99,6 +134,7 @@
     display: flex;
     flex-direction: row;
     flex-grow: 0;
+    flex-shrink: 0;
     width: 30px;
     cursor: pointer;
     pointer-events: all;

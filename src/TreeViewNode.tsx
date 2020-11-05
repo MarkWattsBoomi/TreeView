@@ -92,7 +92,7 @@ export default class TreeViewNode extends React.Component<any, any> {
         e.preventDefault();
         e.stopPropagation();
         const root: TreeView = this.props.root;
-        const node: TreeViewItem = root.findTreeNode(root.nodeTree,this.props.nodeId); 
+        const node: TreeViewItem = root.flatTree.get(this.props.nodeId); 
 
         let lowestLevel: boolean = node.children.size===0;
 
@@ -135,7 +135,7 @@ export default class TreeViewNode extends React.Component<any, any> {
 
     showInfo() {
         const root: TreeView = this.props.root;
-        const node: TreeViewItem = root.findTreeNode(root.nodeTree,this.props.nodeId); 
+        const node: TreeViewItem = root.flatTree.get(this.props.nodeId); 
         let content: any = (
             <ItemInfo
                 item={node}
@@ -152,16 +152,16 @@ export default class TreeViewNode extends React.Component<any, any> {
 
         let buttons: Array<any> = [];
         const root: TreeView = this.props.root;
-        const node: TreeViewItem = root.findTreeNode(root.nodeTree,this.props.nodeId); 
+        const node: TreeViewItem = root.flatTree.get(this.props.nodeId); 
         //const parentItem: TreeViewItem = root.findTreeNode(root.nodeTree,this.props.parentId); 
         //const parent = root.getNode(this.props.parentId);
         //set the queue icon
         icon=node.itemIcon || "envelope";
         
-        if(this.props.children && (this.props.children as Array<any>).length > 0)
+        if((this.props.children && (this.props.children as Array<any>).length > 0) || this.props.expanded===true)
         {
             let expanderIcon: string="plus";
-            if(this.expanded === true)
+            if(this.expanded === true || this.props.expanded===true)
             {
                 expanderIcon="minus";
                 content = this.props.children;
@@ -242,14 +242,34 @@ export default class TreeViewNode extends React.Component<any, any> {
 
         let style: CSSProperties = {};
         style.paddingLeft="10px";
-        //style.visibility="hidden";
-        //style.height="0px";
 
-        //if my parent is expanded then show me 
-        //if(!parent || parent?.expanded===true) {
-        //    style.visibility="visible";
-//style.height="auto";
-        //}
+        //if there's a filter list then hide me if not in it or not in expand list
+        if(root.matchingNodes) {
+            if(root.matchingNodes.indexOf(node.itemId)>=0 || root.filterExpansionPath.indexOf(node.itemId)>=0 || root.expansionPath.indexOf(node.itemId)>=0 || root.selectedNodeId===node.itemId) {
+                style.visibility="visible";
+            }
+            else {
+                style.visibility="hidden";
+                style.height="0px";
+            }
+        }
+
+        let nodeIcon: any;
+        if(root.getAttribute("ShowInfo","false").toLowerCase() === "true") {
+            nodeIcon = (
+                <span 
+                    className={"glyphicon glyphicon-info-sign treeview-node-button"}
+                    onClick={(e: any) => {e.stopPropagation(); this.showInfo(); root.doOutcome("OnInfo", node)}}
+                />
+            );
+        }
+        else {
+            nodeIcon = (
+                <span 
+                    className={"glyphicon glyphicon-" + icon + " treeview-node-icon"}
+                />
+            );
+        }
         
         return( 
             <div
@@ -285,13 +305,7 @@ export default class TreeViewNode extends React.Component<any, any> {
                         <div
                             className="treeview-node-icons"
                         >
-                            <span 
-                                className={"glyphicon glyphicon-" + icon + " treeview-node-icon"}
-                            />
-                            <span 
-                                className={"glyphicon glyphicon-info-sign treeview-node-button"}
-                                onClick={(e: any) => {e.stopPropagation(); this.showInfo(); root.doOutcome("OnInfo", node)}}
-                            />
+                            {nodeIcon}
                         </div>
                         <div
                             className = "treeview-node-label"

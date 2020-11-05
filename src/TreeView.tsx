@@ -26,6 +26,7 @@ export default class TreeView extends FlowComponent {
     nodeTree: Map<number,TreeViewItem>;
     nodeElementTree: Array<any>;
     treeViewNodes: Map<number,TreeViewNode> = new Map();
+    flatTree: Map<number,TreeViewItem> = new Map();
 
     dialogVisible: boolean = false;
     dialogTitle: string = '';
@@ -46,8 +47,13 @@ export default class TreeView extends FlowComponent {
 
     defaultExpanded: boolean = false;
     expansionPath: number[] = [];
+    filterExpansionPath: number[] = [];
+
+    matchingNodes:  number[];
 
     lastContent: any = (<div></div>);
+
+    searchBox: HTMLInputElement;
    
     async showDialog(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
         this.dialogVisible = true;
@@ -104,6 +110,11 @@ export default class TreeView extends FlowComponent {
         this.setNode = this.setNode.bind(this);
         this.showContextMenu = this.showContextMenu.bind(this);
         this.hideContextMenu = this.hideContextMenu.bind(this);  
+        this.filterTree = this.filterTree.bind(this);
+        this.filterTreeClear = this.filterTreeClear.bind(this);
+        this.expandToSelected = this.expandToSelected.bind(this);
+        this.expandToFilter = this.expandToFilter.bind(this);
+        this.searchKeyEvent = this.searchKeyEvent.bind(this);
 
         let dbl: number = parseInt(this.getAttribute("DebugLevel","0"));
               this.debugLevel = dbl || eDebugLevel.error ;
@@ -142,6 +153,24 @@ export default class TreeView extends FlowComponent {
         await super.componentWillUnmount();
         (manywho as any).eventManager.removeDoneListener(this.componentId);
         this.debug("unmount treeview", eDebugLevel.verbose);
+    }
+
+    setSearchBox(element: HTMLInputElement) {
+        if(element){
+            this.searchBox = element;
+            this.searchBox.addEventListener("keyup",this.searchKeyEvent);
+        }
+        else {
+            if(this.searchBox) {
+                this.searchBox.removeEventListener("keyup",this.searchKeyEvent);
+            }
+        }
+    }
+
+    searchKeyEvent(event: KeyboardEvent) {
+        if(event.key.toLowerCase()==="enter") {
+            this.filterTree();
+        }
     }
 
     setNode(key: number, element: TreeViewNode) {
@@ -217,15 +246,32 @@ export default class TreeView extends FlowComponent {
         this.expansionPath = [];
         if(this.selectedNodeId){
             //get the lowest item from nodeTree
-            let nodeItem: TreeViewItem = this.findTreeNode(this.nodeTree,this.selectedNodeId);
+            let nodeItem: TreeViewItem = this.flatTree.get(this.selectedNodeId);
             let topParent: number = nodeItem.itemId;
             while(nodeItem){
-                nodeItem = this.findTreeNode(this.nodeTree,nodeItem.parentId);
+                nodeItem = this.flatTree.get(nodeItem.parentId);
                 if(nodeItem){
-                    this.expansionPath.splice(0,0,nodeItem.itemId);
+                    this.expansionPath = this.expansionPath.concat(nodeItem.itemId);
+                    this.expansionPath = this.expansionPath.filter((item, pos) => this.expansionPath.indexOf(item) === pos);
                 }
             }
         }
+    }
+
+    expandToFilter(){
+        this.filterExpansionPath = [];
+        
+        this.matchingNodes?.forEach((nodeId: number) => {
+            let nodeItem: TreeViewItem = this.flatTree.get(nodeId);
+            let topParent: number = nodeItem.itemId;
+            while(nodeItem){
+                nodeItem = this.flatTree.get(nodeItem.parentId);
+                if(nodeItem){
+                    this.filterExpansionPath = this.filterExpansionPath.concat(nodeItem.itemId);
+                    this.filterExpansionPath = this.filterExpansionPath.filter((item, pos) => this.filterExpansionPath.indexOf(item) === pos);
+                }
+            }
+        });
     }
 
     onDrag(e: any, nodeId: number) {
@@ -389,6 +435,7 @@ export default class TreeView extends FlowComponent {
     ///////////////////////////////////////////////////////////////////
     buildTreeFromModel(items : FlowObjectData[], level: number){
         this.nodeTree = new Map();
+        this.flatTree = new Map();
         
         items.forEach((item: FlowObjectData) => {
             //construct TreeViewItem
@@ -403,6 +450,9 @@ export default class TreeView extends FlowComponent {
             node.children = new Map();
             node.objectData = item;
 
+            //add to flat tree for easy searching
+            this.flatTree.set(node.itemId,node);
+
             //these could be in any order
 
             //if it has no parent id then it's a root item - directly add it to the tree
@@ -411,7 +461,7 @@ export default class TreeView extends FlowComponent {
             //}
             //else {
              //   node.parentId=-1;
-                let parent = this.findTreeNode(this.nodeTree,node.parentId);
+                let parent = this.flatTree.get(node.parentId);
                 if(parent) {
                     node.setItemLevel(parent.itemLevel + 1);
                     parent.children.set(node.itemId, node);
@@ -427,7 +477,7 @@ export default class TreeView extends FlowComponent {
         // now all items are in tree re-iterate looking for parents
         this.nodeTree.forEach((topLevel: TreeViewItem) => {
             //we wont do this if the top level has a 0 or -1 parent id or the parent id= itme id
-            let parent = this.findTreeNode(this.nodeTree,topLevel.parentId)
+            let parent = this.flatTree.get(topLevel.parentId)
             if(parent && !(parent.itemId===topLevel.itemId)) {
                 topLevel.setItemLevel(parent.itemLevel + 1);
                 parent.children.set(topLevel.itemId, topLevel);
@@ -436,10 +486,11 @@ export default class TreeView extends FlowComponent {
         });
     }
 
+    /*
     findTreeNode(nodes: Map<number, TreeViewItem>, nodeId: number) : TreeViewItem | undefined{
         //make sure there's a tree
         let parent: any = undefined;
-        if(nodes) {
+        if(this.flatTree) {
             nodes.forEach((item: TreeViewItem) => {
                 if(!parent) {
                     if(item.itemId === nodeId) {
@@ -453,18 +504,20 @@ export default class TreeView extends FlowComponent {
         }
         return parent;
     }
-
+*/
    
     //////////////////////////////////////////////////////////////
     // Constructs a react component tree from the TreeViewItem map
     //////////////////////////////////////////////////////////////
     buildTree(nodes: Map<number, TreeViewItem>) : Array<any>{
+        this.expandToSelected();
+        this.expandToFilter();
         const elements: Array<any> = [];
         if(nodes) {
             nodes.forEach((node: TreeViewItem) => {
                 let children: Array<any> = this.buildTree(node.children);
                 let expanded: boolean = this.defaultExpanded
-                if(this.expansionPath.indexOf(node.itemId)>=0){
+                if(this.expansionPath.indexOf(node.itemId)>=0 || this.filterExpansionPath.indexOf(node.itemId)>=0){
                     expanded=true;
                 }
                 elements.push(
@@ -482,8 +535,32 @@ export default class TreeView extends FlowComponent {
                 );
             });
         }
-        this.expandToSelected();
+        
         return elements;
+    }
+
+    filterTree() {
+        let criteria: string = this.searchBox?.value;
+        if(criteria?.length > 0) {
+            this.matchingNodes = [];
+            //traverse all nodes
+            this.flatTree.forEach((node: TreeViewItem) => {
+                if(node.itemName.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 || node.itemDescription.toLowerCase().indexOf(criteria.toLowerCase()) >= 0) {
+                    this.matchingNodes = this.matchingNodes.concat(node.itemId);
+                    this.matchingNodes = this.matchingNodes.filter((item, pos) => this.matchingNodes.indexOf(item) === pos);
+                }
+            });
+            console.log(this.matchingNodes);
+        }
+        else {
+            this.matchingNodes = undefined;
+        }
+        this.forceUpdate();
+    }
+
+    filterTreeClear() {
+        this.searchBox.value = "";
+        this.filterTree();
     }
 
     showContextMenu(e: any) {
@@ -603,9 +680,26 @@ export default class TreeView extends FlowComponent {
                         </span>
                     </div>
                     <div
+                        className="treeview-header-search"
+                    >
+                        <input
+                            className="treeview-header-search-input"
+                            ref={(element: HTMLInputElement) => {this.setSearchBox(element)}}
+                        >
+                        </input>
+                        <span 
+                            className={"glyphicon glyphicon-search treeview-header-search-button"}
+                            onClick={this.filterTree}
+                        />
+                        <span 
+                            className={"glyphicon glyphicon-remove treeview-header-search-button"}
+                            onClick={this.filterTreeClear}
+                        />
+
+                    </div>
+                    <div
                         className="treeview-header-buttons"
                     >
-                        
                         {headerButtons}
                     </div>
                 </div>
