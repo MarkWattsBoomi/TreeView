@@ -493,21 +493,32 @@ export default class TreeView extends FlowComponent {
 
         //now tree is completely built, re-iterate sorting
         this.nodeTree.forEach((topLevel: TreeViewItem) => {
-            this.sortTreeNodeChildren(topLevel);
+            this.sortTreeNodeChildren(topLevel,false);
         });
     }
 
-    sortTreeNodeChildren(node: TreeViewItem) {
+    sortTreeNodeChildren(node: TreeViewItem, descending?: boolean) {
         if (node.children.size > 0) {
             node.children = new Map(Array.from(node.children).sort((a: any,b: any) => {
-                switch(true) {
-                    case a[1].itemName > b[1].itemName:
-                        return 1;
-                    case a[1].itemName === b[1].itemName:
-                        return 0;
-                    default: 
-                        return -1;
-    
+                if(descending && descending===true) {
+                    switch(true) {
+                        case a[1].itemName > b[1].itemName:
+                            return -1;
+                        case a[1].itemName === b[1].itemName:
+                            return 0;
+                        default: 
+                            return 1;
+                    }
+                }
+                else {
+                    switch(true) {
+                        case a[1].itemName > b[1].itemName:
+                            return 1;
+                        case a[1].itemName === b[1].itemName:
+                            return 0;
+                        default: 
+                            return -1;
+                    }
                 }
             }));
             node.children.forEach((child: TreeViewItem) => {
