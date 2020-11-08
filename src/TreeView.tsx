@@ -430,9 +430,9 @@ export default class TreeView extends FlowComponent {
 
     
 
-    ///////////////////////////////////////////////////////////////////
-    // constructs a map of TreeViewItems from the model datasource data
-    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // constructs the nodeTree and a flat a map of TreeViewItems from the model datasource data
+    ///////////////////////////////////////////////////////////////////////////////////////////
     buildTreeFromModel(items : FlowObjectData[], level: number){
         this.nodeTree = new Map();
         this.flatTree = new Map();
@@ -452,26 +452,32 @@ export default class TreeView extends FlowComponent {
 
             //add to flat tree for easy searching
             this.flatTree.set(node.itemId,node);
+        });
 
-            //these could be in any order
+        this.flatTree = new Map(Array.from(this.flatTree).sort((a: any,b: any) => {
+            switch(true) {
+                case a[1].itemName > b[1].itemName:
+                    return 1;
+                case a[1].itemName === b[1].itemName:
+                    return 0;
+                default: 
+                    return -1;
 
-            //if it has no parent id then it's a root item - directly add it to the tree
-           // if(!node.parentId || node.parentId<=0){
-            //    this.nodeTree.set(node.itemId, node);
-            //}
-            //else {
-             //   node.parentId=-1;
-                let parent = this.flatTree.get(node.parentId);
-                if(parent) {
-                    node.setItemLevel(parent.itemLevel + 1);
-                    parent.children.set(node.itemId, node);
-                }
-                else {
-                    // my parent isn't in tree yet, just add me at root
-                    node.setItemLevel(level);
-                    this.nodeTree.set(node.itemId, node);
-                }
-           // }
+            }
+        }));
+
+        this.flatTree.forEach((item: TreeViewItem) => {
+
+            let parent = this.flatTree.get(item.parentId);
+            if(parent) {
+                item.setItemLevel(parent.itemLevel + 1);
+                parent.children.set(item.itemId, item);
+            }
+            else {
+                // my parent isn't in tree yet, just add me at root
+                item.setItemLevel(level);
+                this.nodeTree.set(item.itemId, item);
+            }
         });
 
         // now all items are in tree re-iterate looking for parents
@@ -484,27 +490,32 @@ export default class TreeView extends FlowComponent {
                 this.nodeTree.delete(topLevel.itemId);
             }
         });
+
+        //now tree is completely built, re-iterate sorting
+        this.nodeTree.forEach((topLevel: TreeViewItem) => {
+            this.sortTreeNodeChildren(topLevel);
+        });
     }
 
-    /*
-    findTreeNode(nodes: Map<number, TreeViewItem>, nodeId: number) : TreeViewItem | undefined{
-        //make sure there's a tree
-        let parent: any = undefined;
-        if(this.flatTree) {
-            nodes.forEach((item: TreeViewItem) => {
-                if(!parent) {
-                    if(item.itemId === nodeId) {
-                        parent=item;
-                    }
-                    else {
-                        parent = this.findTreeNode(item.children,nodeId);
-                    }
+    sortTreeNodeChildren(node: TreeViewItem) {
+        if (node.children.size > 0) {
+            node.children = new Map(Array.from(node.children).sort((a: any,b: any) => {
+                switch(true) {
+                    case a[1].itemName > b[1].itemName:
+                        return 1;
+                    case a[1].itemName === b[1].itemName:
+                        return 0;
+                    default: 
+                        return -1;
+    
                 }
+            }));
+            node.children.forEach((child: TreeViewItem) => {
+                this.sortTreeNodeChildren(child);
             });
+            
         }
-        return parent;
     }
-*/
    
     //////////////////////////////////////////////////////////////
     // Constructs a react component tree from the TreeViewItem map
