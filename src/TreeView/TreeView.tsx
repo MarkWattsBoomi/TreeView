@@ -1,11 +1,11 @@
 import React, { CSSProperties } from 'react';
 
 import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType } from 'flow-component-model';
-import './css/treeview.css';
-import { MessageBox } from './MessageBox/MessageBox';
+import '../css/treeview.css';
+import { MessageBox } from '../MessageBox/MessageBox';
 import TreeViewNode from './TreeViewNode';
 import TreeViewItem from './TreeViewItem';
-import ContextMenu from './ContextMenu/ContextMenu';
+import ContextMenu from '../ContextMenu/ContextMenu';
 
 //declare const manywho: IManywho;
 declare const manywho: any;
@@ -567,7 +567,7 @@ export default class TreeView extends FlowComponent {
             this.matchingNodes = [];
             //traverse all nodes
             this.flatTree.forEach((node: TreeViewItem) => {
-                if(node.itemName.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 || node.itemDescription.toLowerCase().indexOf(criteria.toLowerCase()) >= 0) {
+                if((node.itemName.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 || node.itemDescription.toLowerCase().indexOf(criteria.toLowerCase()) >= 0) && this.matchingNodes.length < 30) {
                     this.matchingNodes = this.matchingNodes.concat(node.itemId);
                     this.matchingNodes = this.matchingNodes.filter((item, pos) => this.matchingNodes.indexOf(item) === pos);
                 }

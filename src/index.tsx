@@ -1,2 +1,2 @@
-export * from './TreeView';
-export * from './DataGrid';
+export * from './TreeView/TreeView';
+export * from './TableView/TableView';

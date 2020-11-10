@@ -1,6 +1,6 @@
 import { FlowDisplayColumn } from 'flow-component-model';
 import * as React from 'react';
-import TreeViewItem from '../TreeViewItem';
+import TreeViewItem from '../TreeView/TreeViewItem';
 
 export default class ItemInfo extends React.Component<any, any> {
         

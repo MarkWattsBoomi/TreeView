@@ -1,8 +1,8 @@
 import { FlowOutcome, ModalDialog, modalDialogButton } from 'flow-component-model';
 import React, { CSSProperties } from 'react';
-import ContextMenu from './ContextMenu/ContextMenu';
-import ItemInfo from './Dialogs/ItemInfo';
-import { MessageBox } from './MessageBox/MessageBox';
+import ContextMenu from '../ContextMenu/ContextMenu';
+import ItemInfo from '../Dialogs/ItemInfo';
+import { MessageBox } from '../MessageBox/MessageBox';
 import TreeView, { eDebugLevel } from './TreeView';
 import TreeViewItem from './TreeViewItem';
 
