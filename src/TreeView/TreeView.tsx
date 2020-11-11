@@ -54,6 +54,8 @@ export default class TreeView extends FlowComponent {
     lastContent: any = (<div></div>);
 
     searchBox: HTMLInputElement;
+
+    maxResults: number = 30;
    
     async showDialog(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
         this.dialogVisible = true;
@@ -118,8 +120,10 @@ export default class TreeView extends FlowComponent {
 
         let dbl: number = parseInt(this.getAttribute("DebugLevel","0"));
               this.debugLevel = dbl || eDebugLevel.error ;
-        console.log("Debug Level = " + this.debugLevel);
+        this.debug("Debug Level = " + this.debugLevel, eDebugLevel.info);
 
+        this.maxResults = parseInt(this.getAttribute("MaxSearchResults","30"));
+    
         this.defaultExpanded=this.getAttribute("StartExpanded","false").toLowerCase() === "true";
     }
 
@@ -562,17 +566,50 @@ export default class TreeView extends FlowComponent {
     }
 
     filterTree() {
+        let maxResults: number = 30;
         let criteria: string = this.searchBox?.value;
         if(criteria?.length > 0) {
-            this.matchingNodes = [];
-            //traverse all nodes
-            this.flatTree.forEach((node: TreeViewItem) => {
-                if((node.itemName.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 || node.itemDescription.toLowerCase().indexOf(criteria.toLowerCase()) >= 0) && this.matchingNodes.length < 30) {
-                    this.matchingNodes = this.matchingNodes.concat(node.itemId);
-                    this.matchingNodes = this.matchingNodes.filter((item, pos) => this.matchingNodes.indexOf(item) === pos);
+            if(criteria.length < 4) {
+                let content: any = (
+                    <span>Searching with less than 4 characters is not permitted.</span>
+                );
+                this.matchingNodes = undefined;
+                this.showMessageBox("Search Criteria Restriction",content,this.hideMessageBox,[new modalDialogButton("Ok",this.hideMessageBox)]);
+            }
+            else {
+                this.matchingNodes = [];
+                //traverse all nodes
+                this.flatTree.forEach((node: TreeViewItem) => {
+                    if((node.itemName.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 || node.itemDescription.toLowerCase().indexOf(criteria.toLowerCase()) >= 0)) {
+                        this.matchingNodes = this.matchingNodes.concat(node.itemId);
+                        this.matchingNodes = this.matchingNodes.filter((item, pos) => this.matchingNodes.indexOf(item) === pos);
+                    }
+                });
+                this.debug(this.matchingNodes.toString(), eDebugLevel.verbose);
+                switch(true) {
+                    case this.matchingNodes.length >= this.maxResults:
+                        let totResults: number = this.matchingNodes.length;
+                        this.matchingNodes = this.matchingNodes.slice(0,this.maxResults);
+                        this.showMessageBox("Search Results Truncated",
+                            (<div>
+                                <span>{"The search returned too many results"}</span>
+                                <span>{"only the first " + this.maxResults + " of a possible " + totResults + " are being displayed."}</span>
+                            </div>),
+                            this.hideMessageBox,[new modalDialogButton("Ok",this.hideMessageBox)]
+                        );
+                        break;
+
+                    case this.matchingNodes.length === 0:
+                        this.showMessageBox("No Results",
+                            (<span>{"The search returned no matches, please refine your search and try again."}</span>),
+                            this.hideMessageBox,[new modalDialogButton("Ok",this.hideMessageBox)]
+                        );
+                        break;
+                    default:
+                        //do nothing
+                        break;
                 }
-            });
-            console.log(this.matchingNodes);
+            }
         }
         else {
             this.matchingNodes = undefined;
