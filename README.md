@@ -122,10 +122,14 @@ The component requires a list of items of a specific type structure which you mu
 
 The actual names of the types in flow doesn't matter but the attribute names must be adhered to.
 
-The ATTRIBUTES property is optional as is the corresponding type.
-
 You can have other attributes but the tree doesn't use them.
 
+* ITEM_ID is the primary key of the row
+* PARENT_ID tells the tree the parent node's primary key
+* ITEM_NAME is the text used to display in the tree
+* ITEM_DESCRIPTION is shown as the tree item's tooltip
+
+```javascript
 {
     "developerName": "ITEM",
     "developerSummary": "The item rendered as a tree node",
@@ -152,23 +156,10 @@ You can have other attributes but the tree doesn't use them.
             "developerName": "ITEM_DESCRIPTION",
             "id": null,
         },
-        {
-            "contentType": "ContentString",
-            "developerName": "ITEM_TYPE",
-            "id": null,
-        },
-        {
-            "contentType": "ContentString",
-            "developerName": "ITEM_STATUS",
-            "id": null,
-        },
-        {
-            "contentType": "ContentString",
-            "developerName": "IS_LOCKED",
-            "id": null,
-        },
+        ...
     ]
 }
+```
 
 # TableView
 
