@@ -16,6 +16,18 @@ Tools at the top allow complete collapse and expand
 
 Each node is shown with the ITEM_NAME attribute value and the ITEM_DESCRIPTION attribute as its tool tip.
 
+The tree will parse the list of nodes and construct the hierarchical model based on the PARENT_ID.
+
+If a node has no PARENT_ID or that PARENT_ID is not found in another row's ITEM_ID then that row becomes a root / base node.
+
+The tree takes the selected item from the state and will expand the tree to that element and highlight it.
+
+Searching will find any matching nodes and expand to ensure they are visible.
+
+Searching requires a minimum of 4 characters in the box and limits the results to MaxSearchResults.
+
+Searching searches in both the ITEM_NAME & ITEM_DESCRIPTION
+
 
 ## Drag & Drop
 
