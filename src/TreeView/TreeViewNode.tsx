@@ -97,7 +97,7 @@ export default class TreeViewNode extends React.Component<any, any> {
         let lowestLevel: boolean = node.children.size===0;
 
         let listItems: Map<string , any> = new Map();
-        if(this.contextMenu) {
+        if(this.contextMenu && node.isEnabled()) {
             Object.keys(root.outcomes).forEach((key: string) => {
                 const outcome: FlowOutcome = root.outcomes[key];
                 if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect" && outcome.developerName.toLowerCase().startsWith("cm")) {
@@ -182,25 +182,27 @@ export default class TreeViewNode extends React.Component<any, any> {
 
         let lowestLevel: boolean = node.children.size===0;
 
-        Object.keys(root.outcomes).forEach((key: string) => {
-            const outcome: FlowOutcome = root.outcomes[key];
-            if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect" && !outcome.developerName.toLowerCase().startsWith("cm")) {
-                let showOutcome: boolean = true;
-                if(outcome.attributes["LowestOnly"]?.value.toLowerCase() === "true" && !lowestLevel){
-                    showOutcome=false;
+        if(node.isEnabled()) {
+            Object.keys(root.outcomes).forEach((key: string) => {
+                const outcome: FlowOutcome = root.outcomes[key];
+                if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect" && !outcome.developerName.toLowerCase().startsWith("cm")) {
+                    let showOutcome: boolean = true;
+                    if(outcome.attributes["LowestOnly"]?.value.toLowerCase() === "true" && !lowestLevel){
+                        showOutcome=false;
+                    }
+                    if(showOutcome){
+                        buttons.push(
+                            <span 
+                                key={key}
+                                className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " treeview-node-button"} 
+                                title={outcome.label || key}
+                                onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node)}}
+                            />
+                        );
+                    }
                 }
-                if(showOutcome){
-                    buttons.push(
-                        <span 
-                            key={key}
-                            className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " treeview-node-button"} 
-                            title={outcome.label || key}
-                            onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node)}}
-                        />
-                    );
-                }
-            }
-        });
+            });
+        }
 
         let contextMenu = (
             <ContextMenu 
@@ -273,7 +275,7 @@ export default class TreeViewNode extends React.Component<any, any> {
         
         return( 
             <div
-                className="treeview-node"
+                className={"treeview-node " + node.getStyle()}
                 style={style}
                 title={node.itemDescription}
                 onContextMenu={(e: any) => {e.preventDefault()}}

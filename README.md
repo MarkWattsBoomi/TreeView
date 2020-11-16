@@ -28,6 +28,22 @@ Searching requires a minimum of 4 characters in the box and limits the results t
 
 Searching searches in both the ITEM_NAME & ITEM_DESCRIPTION
 
+## Enable / Disable
+
+The nodes in the tree can be flagged as enabled or disabled by setting a known value on the item's ITEM_STATUS attribute.
+
+If empty or null then the default is FALSE
+
+A value of "LOCKED" or "DISABLED": or "READONLY" will make the node disabled.
+
+A value of null or "" or "UNLOCKED" or "ENABLED" or "EDITABLE" or "WRITABLE" will set the node as editable
+
+If a node is not editable then all buttons and context menu items are removed.
+
+Also the value of the ITEM_STATUS will be added to the node's base element as a CSS class prefixed with "nodestyle_" e.g. DISABLED = "nodestyle_disabled".
+
+This allows visual modification of the node through CSS based on its status.
+
 
 ## Drag & Drop
 
@@ -140,6 +156,7 @@ You can have other attributes but the tree doesn't use them.
 * PARENT_ID tells the tree the parent node's primary key
 * ITEM_NAME is the text used to display in the tree
 * ITEM_DESCRIPTION is shown as the tree item's tooltip
+* ITEM_STATUS is used to control the item's functionality, "LOCKED", "DISABLED" will prevent any buttons or context menu being shown and will add a class "TV_" + status to the node
 
 ```javascript
 {
@@ -166,6 +183,11 @@ You can have other attributes but the tree doesn't use them.
         {
             "contentType": "ContentString",
             "developerName": "ITEM_DESCRIPTION",
+            "id": null,
+        },
+        {
+            "contentType": "ContentString",
+            "developerName": "ITEM_STATUS",
             "id": null,
         },
         ...
