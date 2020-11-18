@@ -1,7 +1,9 @@
 import { FlowObjectData } from "flow-component-model";
 
 export default class TreeViewItem {
-    parentId: number ;
+    id: string;
+    parentId: string ;
+    parentItemId: number ;
     itemId: number ;
     itemName: string = "";
     itemDescription: string = "";

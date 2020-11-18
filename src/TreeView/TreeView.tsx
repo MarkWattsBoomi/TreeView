@@ -118,6 +118,8 @@ export default class TreeView extends FlowComponent {
         this.expandToFilter = this.expandToFilter.bind(this);
         this.searchKeyEvent = this.searchKeyEvent.bind(this);
 
+        this.dbg = this.dbg.bind(this);
+
         let dbl: number = parseInt(this.getAttribute("DebugLevel","0"));
               this.debugLevel = dbl || eDebugLevel.error ;
         this.debug("Debug Level = " + this.debugLevel, eDebugLevel.info);
@@ -133,23 +135,39 @@ export default class TreeView extends FlowComponent {
         }
     }
 
-    async flowMoved(msg: any) {
-        console.log("flow moved");
-        this.buildTreeFromModel(this.model.dataSource.items,0);
-        const state: any = this.getStateValue();
-        this.selectedNodeId = state?.properties["ITEM_ID"]?.value as number;
-        this.forceUpdate();
+    async flowMoved(xhr: any, request: any) {
+        let me: any = this;
+        if(xhr.invokeType==="FORWARD") {
+            if(this.loadingState !== eLoadingState.ready){
+                window.setTimeout(function() {me.flowMoved(xhr, request)},500);
+            }
+            else {
+                this.buildTreeFromModel(this.model.dataSource.items,0);
+                this.refreshSelectedFromState();
+            }
+        }
+        
     }
 
     async componentDidMount() {
         //will get this from a component attribute
         await super.componentDidMount();
-        (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
+        
         // build tree
         this.buildTreeFromModel(this.model.dataSource.items,0);
         
-        const state: any = this.getStateValue();
-        this.selectedNodeId = state?.properties["ITEM_ID"]?.value as number;
+        (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
+
+        this.refreshSelectedFromState();
+
+    }
+
+    refreshSelectedFromState() {
+        let state: FlowObjectData = this.getStateValue() as FlowObjectData;
+        this.selectedNodeId = undefined;
+        if(state) {
+            this.selectedNodeId=state.properties["ITEM_ID"].value as number;
+        }
         this.forceUpdate();
     }
 
@@ -211,8 +229,8 @@ export default class TreeView extends FlowComponent {
             (this.outcomes[outcomeName]?.pageActionBindingType !== ePageActionBindingType.NoSave 
                 && node )) 
         {
-            const convertedNode: FlowObjectData = this.convertNode(node.objectData);
-            await this.setStateValue(convertedNode);
+            //const convertedNode: FlowObjectData = this.convertNode(node.objectData);
+            await this.setStateValue(node.objectData);
 
 
             this.selectedNodeId = node.itemId;
@@ -223,8 +241,10 @@ export default class TreeView extends FlowComponent {
                 } 
             }
         }
-        if(this.outcomes[outcomeName] && outcomeName.toLowerCase() !== "onselect") {
-            await this.triggerOutcome(outcomeName);
+        else {
+            if(this.outcomes[outcomeName] && outcomeName.toLowerCase() !== "onselect") {
+                await this.triggerOutcome(outcomeName);
+            }
         }
     }
    
@@ -253,7 +273,7 @@ export default class TreeView extends FlowComponent {
             let nodeItem: TreeViewItem = this.flatTree.get(this.selectedNodeId);
             let topParent: number = nodeItem.itemId;
             while(nodeItem){
-                nodeItem = this.flatTree.get(nodeItem.parentId);
+                nodeItem = this.flatTree.get(nodeItem.parentItemId);
                 if(nodeItem){
                     this.expansionPath = this.expansionPath.concat(nodeItem.itemId);
                     this.expansionPath = this.expansionPath.filter((item, pos) => this.expansionPath.indexOf(item) === pos);
@@ -269,7 +289,7 @@ export default class TreeView extends FlowComponent {
             let nodeItem: TreeViewItem = this.flatTree.get(nodeId);
             let topParent: number = nodeItem.itemId;
             while(nodeItem){
-                nodeItem = this.flatTree.get(nodeItem.parentId);
+                nodeItem = this.flatTree.get(nodeItem.parentItemId);
                 if(nodeItem){
                     this.filterExpansionPath = this.filterExpansionPath.concat(nodeItem.itemId);
                     this.filterExpansionPath = this.filterExpansionPath.filter((item, pos) => this.filterExpansionPath.indexOf(item) === pos);
@@ -445,8 +465,9 @@ export default class TreeView extends FlowComponent {
             //construct TreeViewItem
             let node = new TreeViewItem();
             node.itemLevel = level;
+            node.id = item.internalId;
             node.itemId = item.properties["ITEM_ID"]?.value as number;
-            node.parentId = item.properties["PARENT_ID"]?.value as number
+            node.parentItemId = item.properties["PARENT_ID"]?.value as number
             node.itemName = item.properties["ITEM_NAME"]?.value as string;
             node.itemDescription = item.properties["ITEM_DESCRIPTION"]?.value as string;
             node.itemStatus = item.properties["ITEM_STATUS"]?.value as string;
@@ -472,7 +493,7 @@ export default class TreeView extends FlowComponent {
 
         this.flatTree.forEach((item: TreeViewItem) => {
 
-            let parent = this.flatTree.get(item.parentId);
+            let parent = this.flatTree.get(item.parentItemId);
             if(parent) {
                 item.setItemLevel(parent.itemLevel + 1);
                 parent.children.set(item.itemId, item);
@@ -487,7 +508,7 @@ export default class TreeView extends FlowComponent {
         // now all items are in tree re-iterate looking for parents
         this.nodeTree.forEach((topLevel: TreeViewItem) => {
             //we wont do this if the top level has a 0 or -1 parent id or the parent id= itme id
-            let parent = this.flatTree.get(topLevel.parentId)
+            let parent = this.flatTree.get(topLevel.parentItemId)
             if(parent && !(parent.itemId===topLevel.itemId)) {
                 topLevel.setItemLevel(parent.itemLevel + 1);
                 parent.children.set(topLevel.itemId, topLevel);
@@ -734,6 +755,7 @@ export default class TreeView extends FlowComponent {
                     >
                         <span
                             className="treeview-header-title"
+                            onClick={this.dbg}
                         >
                             {title}
                         </span>
@@ -774,6 +796,10 @@ export default class TreeView extends FlowComponent {
             </div>
         );
         return this.lastContent;
+    }
+
+    dbg() {
+        let state: any = this.getStateValue();
     }
 
 }
