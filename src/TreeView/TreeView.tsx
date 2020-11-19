@@ -225,26 +225,27 @@ export default class TreeView extends FlowComponent {
     }
 
     async doOutcome(outcomeName: string, node: TreeViewItem) {
-        if(outcomeName.toLowerCase() === "onselect" || 
+        if(outcomeName === "OnSelect" || 
             (this.outcomes[outcomeName]?.pageActionBindingType !== ePageActionBindingType.NoSave 
                 && node )) 
         {
-            //const convertedNode: FlowObjectData = this.convertNode(node.objectData);
             await this.setStateValue(node.objectData);
-
-
             this.selectedNodeId = node.itemId;
-            this.forceUpdate();
-            if(outcomeName.toLowerCase() === "onselect") {
-                if(this.outcomes[outcomeName]) {
-                    await this.triggerOutcome(outcomeName);
-                } 
-            }
+        }
+        
+        if(this.outcomes[outcomeName]) {
+            await this.triggerOutcome(outcomeName);
         }
         else {
-            if(this.outcomes[outcomeName] && outcomeName.toLowerCase() !== "onselect") {
-                await this.triggerOutcome(outcomeName);
-            }
+            manywho.component.handleEvent(
+                this,
+                manywho.model.getComponent(
+                    this.componentId,
+                    this.flowKey,
+                ),
+                this.flowKey,
+                null,
+            );
         }
     }
    

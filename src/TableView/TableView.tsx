@@ -238,6 +238,17 @@ export default class TableView extends FlowComponent {
         if(this.outcomes[outcomeName]) {
             await this.triggerOutcome(outcomeName);
         }
+        else {
+            manywho.component.handleEvent(
+                this,
+                manywho.model.getComponent(
+                    this.componentId,
+                    this.flowKey,
+                ),
+                this.flowKey,
+                null,
+            );
+        }
         this.forceUpdate();
     }
 
@@ -259,6 +270,17 @@ export default class TableView extends FlowComponent {
                 item.objectData.isSelected=false; 
             }
             updateData.addItem(item.objectData);
+        });
+        await this.setStateValue(updateData);
+    }
+
+    async pushModifiedToState() {
+        let updateData: FlowObjectDataArray = new FlowObjectDataArray();
+        this.rowMap.forEach((item: TableViewItem) => {
+            if(this.modifiedRows?.has(item.id)){
+                item.objectData.isSelected=true;
+                updateData.addItem(item.objectData);
+            }            
         });
         await this.setStateValue(updateData);
     }
