@@ -359,12 +359,16 @@
     cursor: pointer;
 }
 
-.table-view-row-selected {
-    background-color: #aaa;
+.table-view-row-selected:not(.table-view-row-modified)  {
+    background-color: #ddd;
+}
+
+.table-view-row-modified {
+    background-color: rgb(241, 176, 176);
 }
 
 .table-view-row:not(.table-view-row-selected):hover {
-    background-color: #ddd;
+    background-color: #eee;
     color: #666;
     cursor: pointer;
 }
@@ -394,4 +398,14 @@
     white-space: wrap;
     color: #033d58;
     padding-left: 5px;
+}
+
+.table-view-column-edit {
+    width: 100%;
+    padding-left: 5px;
+    background-color: transparent;
+}
+
+.table-view-column-edit:focus {
+    background-color: #fefefe;
 }

@@ -85,9 +85,9 @@ bootstrap glyphicons without the "glyphicon-" prefix e.g. "trash","edit" etc.
 
 ## Outcome Attributes
 
-### LowestOnly
+### icon
 
-If present and set to "true" then only the lowest level tree nodes will show buttons or context menu items for this outcome
+Sets the glyphicon to show for the outcome.
 
 
 ## Settings
@@ -132,6 +132,9 @@ Setting this attribute to a number e.g. 20 will set the level at which a search 
 
 Setting this attribute to "true" will show the tree initially fully expanded.  Default = false
 
+### LowestOnly
+
+If present and set to "true" then only the lowest level tree nodes will show buttons or context menu items for this outcome
 
 
 ## Styling
@@ -199,7 +202,18 @@ You can have other attributes but the tree doesn't use them.
 
 ## Functionality
 
-The component will display a stylistically equivalent campanion table
+The component will display a stylistically equivalent companion table.
+
+The items are displayed as defined in the display columns.
+
+You can set a column to editable via the metadata at which point you can edit the column value.
+
+It the table has a List state type value and is NOT set to multi-select then the entire model dataset is copied to the state with modified items flagged as selected.
+
+It the table has a List state type value and is set to multi-select then the rows from the model which were modified are copied to the state.
+
+It the table has an Object state type value then only single selection is allowed and the selected row from the model is copied to the state.
+
 
 
 ## DataSource
@@ -209,7 +223,7 @@ Set the datasource to a list objects of any type
 
 ## State
 
-Create a State object of the type of the model data items.
+Create a State object or list of the type of the model data items.
 
 
 ## Outcomes
@@ -228,20 +242,30 @@ bootstrap glyphicons without the "glyphicon-" prefix e.g. "trash","edit" etc.
 
 * "OnSelect" is a special case and is attached to the action of clicking a table row.
 
+* "OnChange" is a special case and is attached to the action of modifying a table cell value and leaving the cell (onBlur).
+
 * If the outcome's developer name begins with "CM" (case insensitive) then the outcome is added to either the main table or the current row's context menu rather than as a button.
 
 * All outcomes including "OnSelect" are optional.
 
 * Outcome order is respected.  
 
+Note: if a table is editable but the "OnChange" outcome is not attached then the table will remember all changes and highlight changed rows. 
+
 
 ## Outcome Attributes
+
+### icon
+
+Sets the glyphicon to show for the outcome.
 
 ## Settings
 
 ### Columns
 
 Sets the display columns for the table.
+
+setting "editable" in a columns's metadata will make the column data editable.
 
 ### Label
 
@@ -251,8 +275,9 @@ The Label of the component is used as the title bar
 
 If specified then these are applied as pixel values.
 
+### Multi Select
 
-
+Setting this to true will force the saved state to only save the modified items.
 
 
 ## Component Attributes

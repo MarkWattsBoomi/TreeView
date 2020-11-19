@@ -1,9 +1,8 @@
 import { eContentType, FlowObjectData } from "flow-component-model";
 
 export class TableViewItem {
-    itemId: any ;
+    id: string;
     columns: Map<any,TableViewColumn> = new Map();
-    itemType: string = "";
     objectData: FlowObjectData;
 }
 

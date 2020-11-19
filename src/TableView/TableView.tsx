@@ -17,13 +17,14 @@ export default class TableView extends FlowComponent {
     context: any;
     debugLevel: eDebugLevel = eDebugLevel.error;
 
-    selectedRowId: number;
-    rowMap: Map<number,TableViewItem> = new Map();
-    rowComponents: Map<number,TableViewRow> = new Map();
+    selectedRows: Map<string,string> = new Map();
+    modifiedRows: Map<string,string> = new Map();
+    rowMap: Map<string,TableViewItem> = new Map();
+    rowComponents: Map<string,TableViewRow> = new Map();
     rowElements: Array<TableViewRow> = [];
     
-    colMap: Map<any,FlowDisplayColumn> = new Map();
-    colComponents: Map<number,TableViewHeader> = new Map();
+    colMap: Map<string,FlowDisplayColumn> = new Map();
+    colComponents: Map<string,TableViewHeader> = new Map();
     colElements: Array<TableViewHeader> = [];
 
     dialogVisible: boolean = false;
@@ -41,7 +42,7 @@ export default class TableView extends FlowComponent {
 
     contextMenu: any;
 
-    matchingRows:  number[];
+    matchingRows:  Map<string,string> = new Map();
 
     lastContent: any = (<div></div>);
 
@@ -102,6 +103,7 @@ export default class TableView extends FlowComponent {
         this.filterTable = this.filterTable.bind(this);
         this.filterTableClear = this.filterTableClear.bind(this);
         this.searchKeyEvent = this.searchKeyEvent.bind(this);
+        this.refreshSelectedFromState = this.refreshSelectedFromState.bind(this);
 
         let dbl: number = parseInt(this.getAttribute("DebugLevel","0"));
               this.debugLevel = dbl || eDebugLevel.error ;
@@ -117,9 +119,8 @@ export default class TableView extends FlowComponent {
     async flowMoved(msg: any) {
         this.debug("flow moved",eDebugLevel.verbose);
         this.buildTableFromModel(this.model.dataSource.items);
-        const state: any = this.getStateValue();
-        this.selectedRowId = state?.properties["ITEM_ID"]?.value as number;
-        this.forceUpdate();
+        await this.pushModelToState();
+        this.refreshSelectedFromState();
     }
 
     async componentDidMount() {
@@ -128,9 +129,18 @@ export default class TableView extends FlowComponent {
         (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
         // build tree
         this.buildTableFromModel(this.model.dataSource.items);
+
+        await this.pushModelToState();
+
+        this.refreshSelectedFromState();
         
+    }
+
+    async refreshSelectedFromState() {
         const state: any = this.getStateValue();
-        this.selectedRowId = state?.properties["ITEM_ID"]?.value as number;
+        if(state) {
+            //this.selectedRowId = state?.properties["ITEM_ID"]?.value as number;
+        }
         this.forceUpdate();
     }
 
@@ -157,7 +167,7 @@ export default class TableView extends FlowComponent {
         }
     }
 
-    setRow(key: number, element: TableViewRow) {
+    setRow(key: string, element: TableViewRow) {
         if(element) {
             this.rowComponents.set(key,element);
         }
@@ -179,30 +189,89 @@ export default class TableView extends FlowComponent {
         }
     }
 
-    getNode(key: number): TableViewRow {
+    getCol(key: string): TableViewRow {
         return this.rowComponents.get(key);
     }
 
-    async doOutcome(outcomeName: string, row: TableViewItem) {
-        if(outcomeName.toLowerCase() === "onselect" || 
-            (this.outcomes[outcomeName]?.pageActionBindingType !== ePageActionBindingType.NoSave 
-                && row )) 
-        {
-            
-            await this.setStateValue(row.objectData);
 
 
-            this.selectedRowId = row.itemId;
-            this.forceUpdate();
-            if(outcomeName.toLowerCase() === "onselect") {
-                if(this.outcomes[outcomeName]) {
-                    await this.triggerOutcome(outcomeName);
+    async doOutcome(outcomeName: string, selectedItem? : string) {
+        switch(true) {
+            case (outcomeName === "OnSelect"):
+            case (outcomeName === "OnChange"):
+            case (this.outcomes[outcomeName]?.pageActionBindingType !== ePageActionBindingType.NoSave):
+                //if it's a list type state
+                if(this.getStateValueType() === eContentType.ContentList){
+                    //we can add the selected item to the list
+                    this.selectedRows.clear();
+                    if(selectedItem) {
+                        this.selectedRows.set(selectedItem,selectedItem);
+                    }
+                    if(outcomeName === "OnChange"){
+                        this.modifiedRows.set(selectedItem,selectedItem);
+                    }
+                    //if multi select then we are working on a selected subset
+                    if(this.model.multiSelect === true) {
+                        //we only store subset
+                        await this.pushSelectedToState();
+                    }
+                    else {
+                        // we store entire model to state
+                        await this.pushModelToState();
+                    }
                 } 
-            }
+                else {
+                    // its a single object state
+                    //we clear selected list then add this one
+                    this.selectedRows.clear();
+                    if(selectedItem) {
+                        this.selectedRows.set(selectedItem,selectedItem);
+                    }
+                    await this.pushSelectedToState();
+                }
+                break;         
+                
+            default:
+                //do nothing
+                break;
         }
-        if(this.outcomes[outcomeName] && outcomeName.toLowerCase() !== "onselect") {
+        if(this.outcomes[outcomeName]) {
             await this.triggerOutcome(outcomeName);
         }
+        this.forceUpdate();
+    }
+
+    async rowValueChanged(rowId: string, colName: string, oldVal: string, newVal: any) {
+        console.log(rowId + "," + colName +" = " + oldVal + "=>" +  newVal);
+
+        this.rowMap.get(rowId).objectData.properties[colName].value = newVal;
+
+        await this.doOutcome("OnChange",rowId);
+    }
+
+    async pushModelToState() {
+        let updateData: FlowObjectDataArray = new FlowObjectDataArray();
+        this.rowMap.forEach((item: TableViewItem) => {
+            if(this.modifiedRows?.has(item.id)){
+                item.objectData.isSelected=true;
+            }
+            else {
+                item.objectData.isSelected=false; 
+            }
+            updateData.addItem(item.objectData);
+        });
+        await this.setStateValue(updateData);
+    }
+
+    async pushSelectedToState() {
+        let updateData: FlowObjectDataArray = new FlowObjectDataArray();
+        this.rowMap.forEach((item: TableViewItem) => {
+            if(this.selectedRows?.has(item.id)){
+                item.objectData.isSelected=true;
+                updateData.addItem(item.objectData);
+            }
+        });
+        await this.setStateValue(updateData);
     }
    
     buildHeaderButtons() : Array<any> {
@@ -214,7 +283,7 @@ export default class TableView extends FlowComponent {
         Object.keys(this.outcomes).forEach((key: string) => {
             const outcome: FlowOutcome = this.outcomes[key];
             
-            if (outcome.isBulkAction && outcome.developerName !== "OnSelect" && !outcome.developerName.toLowerCase().startsWith("cm")) {
+            if (outcome.isBulkAction && outcome.developerName !== "OnSelect" && outcome.developerName !== "OnChange" && !outcome.developerName.toLowerCase().startsWith("cm")) {
                 content.push(
                     <span 
                         key={key}
@@ -254,10 +323,10 @@ export default class TableView extends FlowComponent {
             this.colMap.set(col.developerName,col);
         });
         
-        items.forEach((item: any) => {
-            //construct TreeViewItem
+        items.forEach((item: FlowObjectData) => {
+            //construct Item
             let node = new TableViewItem();
-            node.itemId = item.properties[cols[0].developerName]?.value as any;
+            node.id = item.internalId;
 
             this.colMap.forEach((col:FlowDisplayColumn) => {
                 node.columns.set(col.developerName, new TableViewColumn(col.developerName,col.label, col.contentType, item.properties[col.developerName]?.value as any));
@@ -265,7 +334,7 @@ export default class TableView extends FlowComponent {
                         
             node.objectData = item;
 
-            this.rowMap.set(node.itemId,node);
+            this.rowMap.set(node.id,node);
         });
 
     }
@@ -324,10 +393,10 @@ export default class TableView extends FlowComponent {
             this.rowMap.forEach((node: TableViewItem) => {
                 elements.push(
                     <TableViewRow 
-                        key={node.itemId}
+                        key={node.id}
                         root={this}
-                        rowId={node.itemId}
-                        ref={(element: TableViewRow) => {this.setRow(node.itemId ,element)}}
+                        rowId={node.id}
+                        ref={(element: TableViewRow) => {this.setRow(node.id ,element)}}
                     />
                 );
             });
@@ -338,21 +407,16 @@ export default class TableView extends FlowComponent {
 
     filterTable() {
         let criteria: string = this.searchBox?.value;
+        this.matchingRows.clear();
         if(criteria?.length > 0) {
-            this.matchingRows = [];
             //traverse all nodes
             this.rowMap.forEach((item: TableViewItem) => {
                 item.columns.forEach((col: TableViewColumn) => {
-                    if(col.value?.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 && this.matchingRows.length < 50) {
-                        this.matchingRows = this.matchingRows.concat(item.itemId);
+                    if(col.value?.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 && this.matchingRows.size < 50) {
+                        this.matchingRows.set(item.id,item.id);
                     }
                 });
             });
-            this.matchingRows = this.matchingRows.filter((item, pos) => this.matchingRows.indexOf(item) === pos);
-            this.debug(this.matchingRows.toString(),eDebugLevel.verbose);
-        }
-        else {
-            this.matchingRows = undefined;
         }
         this.forceUpdate();
     }
@@ -395,6 +459,8 @@ export default class TableView extends FlowComponent {
     async hideContextMenu() {
         this.contextMenu.hide();
     }
+    
+
     
 
     render() {
