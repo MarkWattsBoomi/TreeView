@@ -395,14 +395,16 @@ export default class TableView extends FlowComponent {
         const elements: Array<any> = [];
         if(this.colMap) {
             this.colMap.forEach((col: FlowDisplayColumn) => {
-                elements.push(
-                    <TableViewHeader 
-                        key={col.developerName}
-                        root={this}
-                        colId={col.developerName}
-                        ref={(element: TableViewHeader) => {this.setCol(col.developerName ,element)}}
-                    />
-                );
+                if(col.visible === true){
+                    elements.push(
+                        <TableViewHeader 
+                            key={col.developerName}
+                            root={this}
+                            colId={col.developerName}
+                            ref={(element: TableViewHeader) => {this.setCol(col.developerName ,element)}}
+                        />
+                    );
+                }
             });
         }
         

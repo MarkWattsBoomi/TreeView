@@ -461,7 +461,7 @@ export default class TreeView extends FlowComponent {
     buildTreeFromModel(items : FlowObjectData[], level: number){
         this.nodeTree = new Map();
         this.flatTree = new Map();
-        
+        let start: number = new Date().getTime();
         items.forEach((item: FlowObjectData) => {
             //construct TreeViewItem
             let node = new TreeViewItem();
@@ -521,6 +521,12 @@ export default class TreeView extends FlowComponent {
         this.nodeTree.forEach((topLevel: TreeViewItem) => {
             this.sortTreeNodeChildren(topLevel,false);
         });
+
+        this.nodeElementTree = this.buildTree(this.nodeTree);
+    
+        let tot: number = new Date().getTime() - start;
+        this.debug("buildTreeFromModel=" + (tot/1000),eDebugLevel.error);
+ 
     }
 
     sortTreeNodeChildren(node: TreeViewItem, descending?: boolean) {
@@ -558,6 +564,7 @@ export default class TreeView extends FlowComponent {
     // Constructs a react component tree from the TreeViewItem map
     //////////////////////////////////////////////////////////////
     buildTree(nodes: Map<number, TreeViewItem>) : Array<any>{
+        let start: number = new Date().getTime();
         this.expandToSelected();
         this.expandToFilter();
         const elements: Array<any> = [];
@@ -584,6 +591,9 @@ export default class TreeView extends FlowComponent {
             });
         }
         
+        
+        let tot: number = new Date().getTime() - start;
+        //this.debug("buildTree=" + (tot/1000),eDebugLevel.error);
         return elements;
     }
 
@@ -718,8 +728,8 @@ export default class TreeView extends FlowComponent {
         );
 
         //construct tree REACT elements
+        this.debug("render",eDebugLevel.error);
         
-        this.nodeElementTree = this.buildTree(this.nodeTree);
         
 
         //handle classes attribute and hidden and size

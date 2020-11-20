@@ -393,6 +393,13 @@
     flex-basis: 0;
 }
 
+.table-view-column-buttons {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
+    flex-basis: 30px;
+}
+
 .table-view-column-label {
     font-size: 18px;
     white-space: wrap;
@@ -408,4 +415,11 @@
 
 .table-view-column-edit:focus {
     background-color: #fefefe;
+}
+
+.table-view-icon {
+    font-size: 18px;
+    margin: auto;
+    margin-right: 10px;
+    top: -1px !important;
 }
