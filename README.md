@@ -2,7 +2,7 @@ This module provides a tree view & companion table view to display hierarchical 
 
 # Class Names
 
-TreeView & TableView
+TreeView & TableView & ModalNavigation
 
 # TreeView
 
@@ -301,5 +301,28 @@ All elements of the tree can be styled by adding the specific style names to you
 ## Page Conditions
 
 The component respects the show / hide rules applied by the containing page.
+
+
+# ModalNavigation
+
+## Functionality
+
+The component will display a popup modal dialog containing the content value and with the Label as the title when it's companion nav menu item is clicked.
+
+Works for both top level menu items and child ones.
+
+You must have one component per nav menu item on your page.
+
+Every page needs the same set of ModalNavigation components to work.
+
+
+## Settings
+
+Set the component's developerName to the exact same name as a navigation menu element and it will replace the default functionality.
+
+Set the component's label value to the text you want to display in the popup title.
+
+Set the component's content value to the html you want to display in the popup body.
+
 
 
