@@ -1,31 +1,31 @@
 import React, { CSSProperties } from 'react';
 
 import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, FlowDisplayColumn } from 'flow-component-model';
-import '../css/TableView.css';
+import '../css/SelectView.css';
 import { MessageBox } from '../MessageBox/MessageBox';
 import ContextMenu from '../ContextMenu/ContextMenu';
 import { eDebugLevel } from '..';
-import TableViewRow from './TableViewRow';
-import {TableViewItem, TableViewColumn } from './TableViewItem';
-import TableViewHeader from './TableViewColumn';
+import SelectViewRow from './SelectViewRow';
+import {SelectViewItem, SelectViewColumn } from './SelectViewItem';
+import SelectViewHeader from './SelectViewColumn';
 
 //declare const manywho: IManywho;
 declare const manywho: any;
 
-export default class TableView extends FlowComponent {
+export default class SelectView extends FlowComponent {
     version: string="1.0.0";
     context: any;
     debugLevel: eDebugLevel = eDebugLevel.error;
 
     selectedRows: Map<string,string> = new Map();
     modifiedRows: Map<string,string> = new Map();
-    rowMap: Map<string,TableViewItem> = new Map();
-    rowComponents: Map<string,TableViewRow> = new Map();
-    rowElements: Array<TableViewRow> = [];
+    rowMap: Map<string,SelectViewItem> = new Map();
+    rowComponents: Map<string,SelectViewRow> = new Map();
+    rowElements: Array<SelectViewRow> = [];
     
     colMap: Map<string,FlowDisplayColumn> = new Map();
-    colComponents: Map<string,TableViewHeader> = new Map();
-    colElements: Array<TableViewHeader> = [];
+    colComponents: Map<string,SelectViewHeader> = new Map();
+    colElements: Array<SelectViewHeader> = [];
 
     dialogVisible: boolean = false;
     dialogTitle: string = '';
@@ -104,6 +104,8 @@ export default class TableView extends FlowComponent {
         this.filterTableClear = this.filterTableClear.bind(this);
         this.searchKeyEvent = this.searchKeyEvent.bind(this);
         this.refreshSelectedFromState = this.refreshSelectedFromState.bind(this);
+        this.toggleAllSelected = this.toggleAllSelected.bind(this);
+        
 
         let dbl: number = parseInt(this.getAttribute("DebugLevel","0"));
               this.debugLevel = dbl || eDebugLevel.error ;
@@ -117,11 +119,11 @@ export default class TableView extends FlowComponent {
     }
 
     async flowMoved(msg: any) {
-        this.debug("flow moved",eDebugLevel.verbose);
         this.buildTableFromModel(this.model.dataSource.items);
         //await this.pushModelToState();
         this.refreshSelectedFromState();
     }
+
 
     async componentDidMount() {
         //will get this from a component attribute
@@ -139,6 +141,11 @@ export default class TableView extends FlowComponent {
     async refreshSelectedFromState() {
         const state: any = this.getStateValue();
         if(state) {
+            state.items.forEach((item: FlowObjectData) => {
+                if(this.rowMap.has(item.internalId)) {
+                    this.selectedRows.set(item.internalId,item.internalId);
+                }
+            });
             //this.selectedRowId = state?.properties["ITEM_ID"]?.value as number;
         }
         this.forceUpdate();
@@ -167,7 +174,7 @@ export default class TableView extends FlowComponent {
         }
     }
 
-    setRow(key: string, element: TableViewRow) {
+    setRow(key: string, element: SelectViewRow) {
         if(element) {
             this.rowComponents.set(key,element);
         }
@@ -178,7 +185,7 @@ export default class TableView extends FlowComponent {
         }
     }
 
-    setCol(key: any, element: TableViewHeader) {
+    setCol(key: any, element: SelectViewHeader) {
         if(element) {
             this.colComponents.set(key,element);
         }
@@ -189,52 +196,13 @@ export default class TableView extends FlowComponent {
         }
     }
 
-    getCol(key: string): TableViewRow {
+    getCol(key: string): SelectViewRow {
         return this.rowComponents.get(key);
     }
 
 
 
     async doOutcome(outcomeName: string, selectedItem? : string) {
-        switch(true) {
-            case (outcomeName === "OnSelect"):
-            case (outcomeName === "OnChange"):
-            case (this.outcomes[outcomeName]?.pageActionBindingType !== ePageActionBindingType.NoSave):
-                //if it's a list type state
-                if(this.getStateValueType() === eContentType.ContentList){
-                    //we can add the selected item to the list
-                    this.selectedRows.clear();
-                    if(selectedItem) {
-                        this.selectedRows.set(selectedItem,selectedItem);
-                    }
-                    if(outcomeName === "OnChange"){
-                        this.modifiedRows.set(selectedItem,selectedItem);
-                    }
-                    //if multi select then we are working on a selected subset
-                    if(this.model.multiSelect === true) {
-                        //we only store subset
-                        await this.pushSelectedToState();
-                    }
-                    else {
-                        // we store entire model to state
-                        await this.pushModelToState();
-                    }
-                } 
-                else {
-                    // its a single object state
-                    //we clear selected list then add this one
-                    this.selectedRows.clear();
-                    if(selectedItem) {
-                        this.selectedRows.set(selectedItem,selectedItem);
-                    }
-                    await this.pushSelectedToState();
-                }
-                break;         
-                
-            default:
-                //do nothing
-                break;
-        }
         if(this.outcomes[outcomeName]) {
             await this.triggerOutcome(outcomeName);
         }
@@ -252,48 +220,27 @@ export default class TableView extends FlowComponent {
         this.forceUpdate();
     }
 
-    async rowValueChanged(rowId: string, colName: string, oldVal: string, newVal: any) {
-        console.log(rowId + "," + colName +" = " + oldVal + "=>" +  newVal);
-
-        this.rowMap.get(rowId).objectData.properties[colName].value = newVal;
-
-        await this.doOutcome("OnChange",rowId);
-    }
-
-    async pushModelToState() {
-        let updateData: FlowObjectDataArray = new FlowObjectDataArray();
-        this.rowMap.forEach((item: TableViewItem) => {
-            if(this.modifiedRows?.has(item.id)){
-                item.objectData.isSelected=true;
-            }
-            else {
-                item.objectData.isSelected=false; 
-            }
-            updateData.addItem(item.objectData);
-        });
-        await this.setStateValue(updateData);
-    }
-
-    async pushModifiedToState() {
-        let updateData: FlowObjectDataArray = new FlowObjectDataArray();
-        this.rowMap.forEach((item: TableViewItem) => {
-            if(this.modifiedRows?.has(item.id)){
-                item.objectData.isSelected=true;
-                updateData.addItem(item.objectData);
-            }            
-        });
-        await this.setStateValue(updateData);
-    }
-
     async pushSelectedToState() {
         let updateData: FlowObjectDataArray = new FlowObjectDataArray();
-        this.rowMap.forEach((item: TableViewItem) => {
+        this.rowMap.forEach((item: SelectViewItem) => {
             if(this.selectedRows?.has(item.id)){
                 item.objectData.isSelected=true;
                 updateData.addItem(item.objectData);
             }
         });
         await this.setStateValue(updateData);
+    }
+
+    rowSelected(rowId: string) {
+        if(!this.selectedRows.has(rowId)) {
+            this.selectedRows.set(rowId,rowId);
+        }
+        else {
+            this.selectedRows.delete(rowId);
+        }
+        this.pushSelectedToState();
+        this.doOutcome("OnSelect");
+        this.forceUpdate();
     }
    
     buildHeaderButtons() : Array<any> {
@@ -305,7 +252,7 @@ export default class TableView extends FlowComponent {
         Object.keys(this.outcomes).forEach((key: string) => {
             const outcome: FlowOutcome = this.outcomes[key];
             
-            if (outcome.isBulkAction && outcome.developerName !== "OnSelect" && outcome.developerName !== "OnChange" && !outcome.developerName.toLowerCase().startsWith("cm")) {
+            if (outcome.isBulkAction && outcome.developerName !== "OnSelect" && !outcome.developerName.toLowerCase().startsWith("cm")) {
                 content.push(
                     <span 
                         key={key}
@@ -341,17 +288,26 @@ export default class TableView extends FlowComponent {
             }
         });
 
+        if(this.model.multiSelect === true) {
+            let col: any = {};
+            col.contentType = eContentType.ContentBoolean;
+            col.developerName = "_check";
+            col.displayOrder = -1;
+            col.visible = true;
+            col.label = "selected";
+            this.colMap.set("_check",col);
+        }
         cols.forEach((col: FlowDisplayColumn) => {
             this.colMap.set(col.developerName,col);
         });
         
         items.forEach((item: FlowObjectData) => {
             //construct Item
-            let node = new TableViewItem();
+            let node = new SelectViewItem();
             node.id = item.internalId;
 
             this.colMap.forEach((col:FlowDisplayColumn) => {
-                node.columns.set(col.developerName, new TableViewColumn(col.developerName,col.label, col.contentType, item.properties[col.developerName]?.value as any));
+                node.columns.set(col.developerName, new SelectViewColumn(col.developerName,col.label, col.contentType, item.properties[col.developerName]?.value as any));
             });
                         
             node.objectData = item;
@@ -388,22 +344,50 @@ export default class TableView extends FlowComponent {
         }
     }
    
+    toggleAllSelected(e: any) {
+        if(!e.target.checked) {
+            this.selectedRows.clear();
+        }
+        else {
+            this.rowMap.forEach((row: SelectViewItem) => {
+                this.selectedRows.set(row.id,row.id);
+            });
+        }
+        this.pushSelectedToState();
+        this.forceUpdate();
+    }
     //////////////////////////////////////////////////////////////
     // Constructs a react component tree from the TreeViewItem map
     //////////////////////////////////////////////////////////////
     buildTableHeaders() : Array<any>{
         const elements: Array<any> = [];
+        
         if(this.colMap) {
             this.colMap.forEach((col: FlowDisplayColumn) => {
                 if(col.visible === true){
-                    elements.push(
-                        <TableViewHeader 
-                            key={col.developerName}
-                            root={this}
-                            colId={col.developerName}
-                            ref={(element: TableViewHeader) => {this.setCol(col.developerName ,element)}}
-                        />
-                    );
+                    if(col.developerName === "_check") {
+                        elements.push(
+                            <div 
+                                className = "select-view-check-column"
+                            >
+                                <input
+                                    className="select-view-check-box" 
+                                    type="checkbox"
+                                    onClick={this.toggleAllSelected}
+                                /> 
+                            </div>
+                        );
+                    }
+                    else {
+                        elements.push(
+                            <SelectViewHeader 
+                                key={col.developerName}
+                                root={this}
+                                colId={col.developerName}
+                                ref={(element: SelectViewHeader) => {this.setCol(col.developerName ,element)}}
+                            />
+                        );
+                    }
                 }
             });
         }
@@ -414,13 +398,13 @@ export default class TableView extends FlowComponent {
     buildTable() : Array<any>{
         const elements: Array<any> = [];
         if(this.rowMap) {
-            this.rowMap.forEach((node: TableViewItem) => {
+            this.rowMap.forEach((node: SelectViewItem) => {
                 elements.push(
-                    <TableViewRow 
+                    <SelectViewRow 
                         key={node.id}
                         root={this}
                         rowId={node.id}
-                        ref={(element: TableViewRow) => {this.setRow(node.id ,element)}}
+                        ref={(element: SelectViewRow) => {this.setRow(node.id ,element)}}
                     />
                 );
             });
@@ -434,9 +418,9 @@ export default class TableView extends FlowComponent {
         this.matchingRows.clear();
         if(criteria?.length > 0) {
             //traverse all nodes
-            this.rowMap.forEach((item: TableViewItem) => {
-                item.columns.forEach((col: TableViewColumn) => {
-                    if(col.value?.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 && this.matchingRows.size < 50) {
+            this.rowMap.forEach((item: SelectViewItem) => {
+                item.columns.forEach((col: SelectViewColumn) => {
+                    if(col.value?.toString().toLowerCase()?.indexOf(criteria.toLowerCase()) >= 0 && this.matchingRows.size < 50) {
                         this.matchingRows.set(item.id,item.id);
                     }
                 });
@@ -618,4 +602,4 @@ export default class TableView extends FlowComponent {
 
 }
 
-manywho.component.register('TableView', TableView);
+manywho.component.register('SelectView', SelectView);

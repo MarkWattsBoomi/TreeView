@@ -1,0 +1,143 @@
+.select-view-body {
+    flex-grow: 1;
+    flex-shrink: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.select-view-headers {
+    display: flex;
+    flex-direction: row;
+    background-color: #ccc;
+}
+
+.select-view-header {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    font-size: 18px;
+    white-space: nowrap;
+    color: #111;
+    font-weight: 500;
+}
+
+.select-view-header-label {
+    font-size: 18px;
+    white-space: nowrap;
+    margin: auto;
+}
+
+.select-view-scroller {
+    overflow: scroll;
+    flex-grow: 1;
+    flex-shrink: 1;
+    display: block;
+}
+
+.select-view-scroller-body {
+    flex-grow: 1;
+    flex-shrink: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+}
+
+.select-view-row {
+    justify-content: space-evenly;
+    display: flex;
+    flex-direction: row;
+    cursor: pointer;
+}
+
+.select-view-row:hover {
+    display: flex;
+    flex-direction: row;
+    cursor: pointer;
+}
+
+.select-view-row-selected:not(.select-view-row-modified)  {
+    background-color: #ddd;
+}
+
+.select-view-row-modified {
+    background-color: rgb(241, 176, 176);
+}
+
+.select-view-row:not(.select-view-row-selected):hover {
+    background-color: #eee;
+    color: #666;
+    cursor: pointer;
+}
+
+.select-view-row-buttons {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
+}
+
+.select-view-row-columns {
+    justify-content: space-evenly;
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.select-view-column {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.select-view-column-buttons {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
+    flex-basis: 30px;
+}
+
+.select-view-column-label {
+    font-size: 18px;
+    white-space: wrap;
+    color: #033d58;
+    padding-left: 5px;
+}
+
+.select-view-column-edit {
+    width: 100%;
+    padding-left: 5px !important;
+    background-color: transparent;
+    box-shadow: none !important;
+}
+
+.select-view-column-edit:focus {
+    background-color: #fefefe;
+}
+
+.select-view-icon {
+    font-size: 18px;
+    margin: auto;
+    margin-right: 10px;
+    top: -1px !important;
+}
+
+.select-view-check-column {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
+    flex-basis: 40px;
+}
+
+.select-view-check-box {
+    display: block !important;
+    appearance: revert !important;
+    content: unset !important;
+    margin: auto !important;
+    transform: scale(1.5); 
+    padding: auto;
+}
+
+.select-view-check-box::after,.select-view-check-box::before {
+    display: none !important;
+}

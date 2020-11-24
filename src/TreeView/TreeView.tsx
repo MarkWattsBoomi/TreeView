@@ -159,7 +159,6 @@ export default class TreeView extends FlowComponent {
         (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
 
         this.refreshSelectedFromState();
-
     }
 
     refreshSelectedFromState() {
@@ -168,6 +167,7 @@ export default class TreeView extends FlowComponent {
         if(state) {
             this.selectedNodeId=state.properties["ITEM_ID"].value as number;
         }
+        this.expandToSelected();
         this.forceUpdate();
     }
 
