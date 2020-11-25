@@ -109,6 +109,13 @@ export default class TableViewRow extends React.Component<any,any> {
             }
         });
 
+        let buttonsLeft: any = buttons;
+        let buttonsRight: any;
+        if(root.getAttribute("ButtonPositionRight","false").toLowerCase() === "true"){
+            buttonsRight = buttons;
+            buttonsLeft = undefined;
+        }
+
         let lastColDef: FlowDisplayColumn;
         let infoButton: any;
         row.columns.forEach((col: TableViewColumn) => {
@@ -194,13 +201,18 @@ export default class TableViewRow extends React.Component<any,any> {
                 <div
                     className={"table-view-row-buttons" + selectedClass}
                 >
-                    {buttons}
+                    {buttonsLeft}
                 </div>
                 <div
                     className={"table-view-row-columns" + selectedClass}
                     onClick={(e: any) => {root.doOutcome("OnSelect",row.id)}}
                 >
                     {content}
+                </div>
+                <div
+                    className={"table-view-row-buttons" + selectedClass}
+                >
+                    {buttonsRight}
                 </div>
             </div>
         );

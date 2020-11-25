@@ -1,6 +1,6 @@
 import React, { CSSProperties } from 'react';
 
-import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, FlowDisplayColumn } from 'flow-component-model';
+import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField } from 'flow-component-model';
 import '../css/SelectView.css';
 import { MessageBox } from '../MessageBox/MessageBox';
 import ContextMenu from '../ContextMenu/ContextMenu';
@@ -203,6 +203,16 @@ export default class SelectView extends FlowComponent {
 
 
     async doOutcome(outcomeName: string, selectedItem? : string) {
+
+        //if there's a selectedItem then this must be being triggered at a row level.
+        //set the single item field if defined
+        if(selectedItem && this.getAttribute("RowLevelState","").length>0) {
+            let val: FlowField = await this.loadValue(this.getAttribute("RowLevelState"));
+            if (val) {
+                val.value = this.rowMap.get(selectedItem).objectData as FlowObjectData;
+                await this.updateValues(val);
+            }
+        }
         if(this.outcomes[outcomeName]) {
             await this.triggerOutcome(outcomeName);
         }

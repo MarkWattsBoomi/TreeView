@@ -2,7 +2,7 @@ This module provides a tree view & companion table view to display hierarchical 
 
 # Class Names
 
-TreeView & TableView & ModalNavigation
+TreeView & TableView & SelectView & ModalNavigation
 
 # TreeView
 
@@ -223,7 +223,7 @@ Set the datasource to a list objects of any type
 
 ## State
 
-Create a State object or list of the type of the model data items.
+Create a State list of the type of the model data items.  The state must be a list !!!
 
 
 ## Outcomes
@@ -233,7 +233,7 @@ Any outcome attached to the component is dealt with in this way: -
 * If the outcome is set as "Appears At Top" then it will become a button in the top title bar or its context menu otherwise it becomes a button on the table row or its context menu.
 
 * If the outcome has its "When this outcome is selected" option set to either "Save Changes" or "Partially Save Changes" and is attached 
-to a table row then the current row is set as the state value when triggered.
+to a table row then the current row is stored into the value defined in the table's "RowLevelState" attribute.  Give it the name of a value which is an object of the tables model type.
 
 * If the outcome has an "icon" attribute then this value is used to specify the icon, otherwise a default "+" icon is used.  Note: Icons are 
 bootstrap glyphicons without the "glyphicon-" prefix e.g. "trash","edit" etc.
@@ -277,7 +277,7 @@ If specified then these are applied as pixel values.
 
 ### Multi Select
 
-Setting this to true will force the saved state to only save the modified items.
+Setting this to true will force the saved state to only save the modified items.  If false then the entire model will be saved to the state
 
 
 ## Component Attributes

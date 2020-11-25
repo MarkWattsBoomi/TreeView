@@ -1,6 +1,6 @@
 import React, { CSSProperties } from 'react';
 
-import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, FlowDisplayColumn } from 'flow-component-model';
+import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField } from 'flow-component-model';
 import '../css/TableView.css';
 import { MessageBox } from '../MessageBox/MessageBox';
 import ContextMenu from '../ContextMenu/ContextMenu';
@@ -196,17 +196,32 @@ export default class TableView extends FlowComponent {
 
 
     async doOutcome(outcomeName: string, selectedItem? : string) {
-        switch(true) {
-            case (outcomeName === "OnSelect"):
-            case (outcomeName === "OnChange"):
-            case (this.outcomes[outcomeName]?.pageActionBindingType !== ePageActionBindingType.NoSave):
+        //if there's a selectedItem then this must be being triggered at a row level.
+        //set the single item field if defined
+        if(selectedItem) {
+            //we should set the component's single selected item by adding it to the emptied list
+            this.selectedRows.clear();
+            if(selectedItem) {
+                this.selectedRows.set(selectedItem,selectedItem);
+            }
+            //now if there's a RowLevelState attribute defined, get it and update it with the selected item's object data
+            if(this.getAttribute("RowLevelState","").length>0) {
+                let val: FlowField = await this.loadValue(this.getAttribute("RowLevelState"));
+                if (val) {
+                    val.value = this.rowMap.get(selectedItem).objectData as FlowObjectData;
+                    await this.updateValues(val);
+                }
+            }
+        }
+        
+        //if it's on select, change or the outcome should save values then store something to the state
+        if(outcomeName === "OnSelect" || 
+            outcomeName === "OnChange" || 
+            this.outcomes[outcomeName]?.pageActionBindingType !== ePageActionBindingType.NoSave) {
+                //the model's type & multiselect defines what we save to the state
                 //if it's a list type state
                 if(this.getStateValueType() === eContentType.ContentList){
-                    //we can add the selected item to the list
-                    this.selectedRows.clear();
-                    if(selectedItem) {
-                        this.selectedRows.set(selectedItem,selectedItem);
-                    }
+                    //if it's OnChange then add item to modified list
                     if(outcomeName === "OnChange"){
                         this.modifiedRows.set(selectedItem,selectedItem);
                     }
@@ -222,18 +237,9 @@ export default class TableView extends FlowComponent {
                 } 
                 else {
                     // its a single object state
-                    //we clear selected list then add this one
-                    this.selectedRows.clear();
-                    if(selectedItem) {
-                        this.selectedRows.set(selectedItem,selectedItem);
-                    }
+                    
                     await this.pushSelectedToState();
                 }
-                break;         
-                
-            default:
-                //do nothing
-                break;
         }
         if(this.outcomes[outcomeName]) {
             await this.triggerOutcome(outcomeName);

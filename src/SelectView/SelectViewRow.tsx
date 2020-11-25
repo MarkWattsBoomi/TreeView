@@ -134,6 +134,13 @@ export default class SelectViewRow extends React.Component<any,any> {
             );
         }
 
+        let buttonsLeft: any = buttons;
+        let buttonsRight: any;
+        if(root.getAttribute("ButtonPositionRight","false").toLowerCase() === "true"){
+            buttonsRight = buttons;
+            buttonsLeft = undefined;
+        }
+
         return (
             <div
                 className={"select-view-row" + selectedClass}
@@ -144,13 +151,18 @@ export default class SelectViewRow extends React.Component<any,any> {
                 <div
                     className={"select-view-row-buttons" + selectedClass}
                 >
-                    {buttons}
+                    {buttonsLeft}
                 </div>
                 <div
                     className={"select-view-row-columns" + selectedClass}
                     onClick={(e: any) => {root.doOutcome("OnSelect",row.id)}}
                 >
                     {content}
+                </div>
+                <div
+                    className={"select-view-row-buttons" + selectedClass}
+                >
+                    {buttonsRight}
                 </div>
             </div>
         );
