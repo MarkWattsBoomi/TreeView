@@ -9,15 +9,15 @@ export default class SelectViewHeader extends React.Component<any,any> {
         const col: FlowDisplayColumn = root.colMap.get(this.props.colId)
 
         return (
-            <div
-                className="table-view-header"
+            <th
+                className="select-view-table-header"
             >
                 <span
-                    className="table-view-header-label"
+                    className="select-view-table-header-label"
                 >
                     {col.label}
                 </span>
-            </div>
+            </th>
         );
     }
 }

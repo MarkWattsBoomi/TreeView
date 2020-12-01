@@ -38,6 +38,7 @@ export default class SelectViewRow extends React.Component<any,any> {
     }
 
     selected(e: any) {
+        e.stopPropagation();
         const root: SelectView = this.props.root;
         root.rowSelected(this.props.rowId);
     }
@@ -62,11 +63,11 @@ export default class SelectViewRow extends React.Component<any,any> {
         //if there's a filter list then hide me if not in it or not in expand list
         if(root.matchingRows.size > 0) {
             if(root.matchingRows.has(row.id) || root.selectedRows.has(row.id)) {
-                style.visibility="visible";
+                
             }
             else {
-                style.visibility="hidden";
-                style.height="0px";
+                style.display="none";
+
             }
         }
         else{
@@ -79,7 +80,7 @@ export default class SelectViewRow extends React.Component<any,any> {
                 buttons.push(
                     <span 
                         key={key}
-                        className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " treeview-node-button"} 
+                        className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " select-view-body-column-button"} 
                         title={outcome.label || key}
                         onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, row.id)}}
                     />
@@ -87,39 +88,57 @@ export default class SelectViewRow extends React.Component<any,any> {
             }
         });
 
+        if(root.model.multiSelect === true) {
+            content.push(
+                <td 
+                    className = "select-view-table-body-check-column"
+                >
+                    <input
+                        className="select-view-check-box" 
+                        type="checkbox"
+                        checked={root.selectedRows.has(row.id)}
+                        onClick={this.selected}
+                    /> 
+                </td>
+            );
+        }
+
+        if(root.getAttribute("ButtonPositionRight","false").toLowerCase() !== "true"){
+            content.push(
+                <td
+                    className = "select-view-table-buttons-body"
+                >
+                    {buttons}
+                </td>
+            );
+        }
+
         row.columns.forEach((col: SelectViewColumn) => {
             const colDef: FlowDisplayColumn = root.colMap.get(col.name);
             if(colDef.visible === true){
-                let cell: any;
-                if(colDef.developerName==="_check") {
-                    content.push(
-                        <div 
-                            className = "select-view-check-column"
+                content.push(
+                    <td
+                        className="select-view-table-body-column"
+                    >
+                        <label
+                            className="select-view-table-body-column-label"
                         >
-                            <input
-                                className="select-view-check-box" 
-                                type="checkbox"
-                                checked={root.selectedRows.has(row.id)}
-                                onClick={this.selected}
-                            /> 
-                        </div>
-                    );
-                }
-                else {
-                    content.push(
-                        <div
-                            className="select-view-column"
-                        >
-                            <label
-                                className="select-view-column-label"
-                            >
-                                {col.value}
-                            </label>
-                        </div>
-                    );
-                }
+                            {col.value}
+                        </label>
+                    </td>
+                );
             }
         });
+
+        if(root.getAttribute("ButtonPositionRight","false").toLowerCase() === "true"){
+            content.push(
+                <td
+                    className = "select-view-table-buttons-body"
+                >
+                    {buttons}
+                </td>
+            );
+        }
         
         let msgbox: any;
         if (this.msgboxVisible === true) {
@@ -134,15 +153,22 @@ export default class SelectViewRow extends React.Component<any,any> {
             );
         }
 
-        let buttonsLeft: any = buttons;
-        let buttonsRight: any;
-        if(root.getAttribute("ButtonPositionRight","false").toLowerCase() === "true"){
-            buttonsRight = buttons;
-            buttonsLeft = undefined;
-        }
-
         return (
-            <div
+            <tr
+                className={"select-view-table-row" + selectedClass}
+                onClick={this.selected}
+                style={style}
+            >
+                {msgbox}
+                {content}
+                
+            </tr>
+
+
+        );
+
+        /*
+        <div
                 className={"select-view-row" + selectedClass}
                 onClick={(e: any) => {root.doOutcome("OnSelect",row.id)}}
                 style={style}
@@ -165,6 +191,6 @@ export default class SelectViewRow extends React.Component<any,any> {
                     {buttonsRight}
                 </div>
             </div>
-        );
+            */
     }
 }

@@ -298,15 +298,7 @@ export default class SelectView extends FlowComponent {
             }
         });
 
-        if(this.model.multiSelect === true) {
-            let col: any = {};
-            col.contentType = eContentType.ContentBoolean;
-            col.developerName = "_check";
-            col.displayOrder = -1;
-            col.visible = true;
-            col.label = "selected";
-            this.colMap.set("_check",col);
-        }
+        
         cols.forEach((col: FlowDisplayColumn) => {
             this.colMap.set(col.developerName,col);
         });
@@ -372,34 +364,49 @@ export default class SelectView extends FlowComponent {
     buildTableHeaders() : Array<any>{
         const elements: Array<any> = [];
         
+        if(this.model.multiSelect === true) {
+            elements.push(
+                <th 
+                    className = "select-view-table-check-header"
+                >
+                    <input
+                        className="select-view-check-box" 
+                        type="checkbox"
+                        onClick={this.toggleAllSelected}
+                    /> 
+                </th>
+            )
+        }
+
+        if(this.getAttribute("ButtonPositionRight","false").toLowerCase() !== "true"){
+            elements.push(
+                <th 
+                    className = "select-view-table-header"
+                />
+            );
+        }
+
         if(this.colMap) {
             this.colMap.forEach((col: FlowDisplayColumn) => {
                 if(col.visible === true){
-                    if(col.developerName === "_check") {
-                        elements.push(
-                            <div 
-                                className = "select-view-check-column"
-                            >
-                                <input
-                                    className="select-view-check-box" 
-                                    type="checkbox"
-                                    onClick={this.toggleAllSelected}
-                                /> 
-                            </div>
-                        );
-                    }
-                    else {
-                        elements.push(
-                            <SelectViewHeader 
-                                key={col.developerName}
-                                root={this}
-                                colId={col.developerName}
-                                ref={(element: SelectViewHeader) => {this.setCol(col.developerName ,element)}}
-                            />
-                        );
-                    }
+                    elements.push(
+                        <SelectViewHeader 
+                            key={col.developerName}
+                            root={this}
+                            colId={col.developerName}
+                            ref={(element: SelectViewHeader) => {this.setCol(col.developerName ,element)}}
+                        />
+                    );
                 }
             });
+        }
+
+        if(this.getAttribute("ButtonPositionRight","false").toLowerCase() === "true"){
+            elements.push(
+                <th 
+                    className = "select-view-table-header"
+                />
+            );
         }
         
         return elements;
@@ -551,45 +558,66 @@ export default class SelectView extends FlowComponent {
                 {modal}
                 {msgbox}
                 <div
-                    className="treeview-header"
+                    className="select-view-header"
                 >
                     <div
-                        className="treeview-header-title-wrapper"
+                        className="select-view-header-title-wrapper"
                     >
                         <span
-                            className="treeview-header-title"
+                            className="select-view-header-title"
                         >
                             {title}
                         </span>
                     </div>
                     <div
-                        className="treeview-header-search"
+                        className="select-view-header-search"
                     >
                         <input
-                            className="treeview-header-search-input"
+                            className="select-view-header-search-input"
                             ref={(element: HTMLInputElement) => {this.setSearchBox(element)}}
                         >
                         </input>
                         <span 
-                            className={"glyphicon glyphicon-search treeview-header-search-button"}
+                            className={"glyphicon glyphicon-search select-view-header-search-button"}
                             onClick={this.filterTable}
                         />
                         <span 
-                            className={"glyphicon glyphicon-remove treeview-header-search-button"}
+                            className={"glyphicon glyphicon-remove select-view-header-search-button"}
                             onClick={this.filterTableClear}
                         />
 
                     </div>
                     <div
-                        className="treeview-header-buttons"
+                        className="select-view-header-buttons"
                     >
                         {headerButtons}
                     </div>
                 </div>
                 <div
-                    className="table-view-body"
+                    className="select-view-body"
                 >
-                    <div
+                    <table
+                        className="select-view-table"
+                    >
+                        <thead>
+                            <tr
+                                className="select-view-table-headers"
+                            >
+                                {this.colElements}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {this.rowElements}
+                        </tbody>
+                    </table>
+                    
+                </div>
+                
+            </div>
+        );
+        return this.lastContent;
+    }
+    /*<div
                         className="table-view-headers"
                     >
                         {this.colElements}
@@ -603,12 +631,7 @@ export default class SelectView extends FlowComponent {
                             {this.rowElements}
                         </div>
                     </div>
-                </div>
-                
-            </div>
-        );
-        return this.lastContent;
-    }
+                    */
 
 }
 
