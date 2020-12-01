@@ -3,7 +3,7 @@
     flex-shrink: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: auto;
 }
 
 .select-view-headers {
@@ -199,7 +199,7 @@
 */
 
 .select-view-table {
-
+    overflow: visible;
 }
 
 .select-view-table-headers {
@@ -207,10 +207,15 @@
 }
 
 .select-view-table-header {
-    
+    background-color: #ccc;
+    position: sticky;
+    top: 0;
 }
 
 .select-view-table-check-header {
+    background-color: #ccc;
+    position: sticky;
+    top: 0;
     width: 40px;
 }
 
