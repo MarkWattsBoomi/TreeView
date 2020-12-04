@@ -69,21 +69,23 @@ export default class ModelExport extends FlowComponent {
 
         const blob = new Blob([file], { type: 'text/csv' });
         if (navigator.msSaveBlob) { // IE 10+
-            navigator.msSaveBlob(blob, 'output.csv');
+            navigator.msSaveBlob(blob, this.getAttribute("ExportFileName","output") + '.csv');
         } else {
             const link = document.createElement('a');
             if (link.download !== undefined) { // feature detection
                 // Browsers that support HTML5 download attribute
                 const url = URL.createObjectURL(blob);
                 link.setAttribute('href', url);
-                link.setAttribute('download', 'output.csv');
+                link.setAttribute('download', this.getAttribute("ExportFileName","output") + '.csv');
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
             }
         }
-
+        if(this.outcomes["OnExport"]) {
+            this.triggerOutcome("OnExport");
+        }
     }
 
     buildHeaders(cols: Map<string,FlowDisplayColumn>, values: FlowObjectData) : string {
@@ -96,7 +98,7 @@ export default class ModelExport extends FlowComponent {
                         if (headers.length > 0) {
                             headers += ',';
                         }
-                        headers += '"' + item.properties["ATTRIBUTE_NAME"].value + '"';
+                        headers += '"' + item.properties["ATTRIBUTE_DISPLAY_NAME"].value + '"';
                     });
                     
                     break;
