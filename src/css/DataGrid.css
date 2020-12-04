@@ -1,0 +1,152 @@
+.data-grid-body {
+    flex-grow: 1;
+    flex-shrink: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+}
+
+.data-grid-headers {
+    display: flex;
+    flex-direction: row;
+    background-color: #ccc;
+}
+
+.data-grid-header {
+    background-color: #033d58;
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
+    font-size: 18px;
+    white-space: nowrap;
+    color: #111;
+    font-weight: 500;
+}
+
+.data-grid-header-title-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.data-grid-header-title {
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    color: #DF6D59;
+    color: #ddd;
+    font-size: 18px;
+    font-weight: 500;
+    margin: auto;
+    margin-left: 18px;
+    user-select: none;
+}
+
+.data-grid-header-search {
+    display: flex;
+    flex-direction: row;
+    background-color: #fefefe;
+    flex-grow: 0;
+    margin-right: 30px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.data-grid-header-search-input {
+    font-size: 18px !important;
+    line-height: 1 !important;
+    color: #033d58 !important;
+    border: none !important;
+    background-color: transparent !important;
+}
+
+.data-grid-header-search-button {
+    font-size: 18px;
+    margin: 0;
+    color: #033d58;
+    align-self: center;
+    top: 0 !important;
+    margin: auto;
+    margin-right: 5px;
+    margin-left: 5px;
+}
+
+.data-grid-header-search-button:hover {
+    color: #ff7c66;
+    cursor: pointer;
+}
+
+.data-grid-table {
+    overflow: visible;
+}
+
+.data-grid-table-headers {
+    background-color: #ccc;
+}
+
+.data-grid-table-header {
+    background-color: #ccc;
+    position: sticky;
+    top: 0;
+}
+
+.data-grid-table-check-header {
+    background-color: #ccc;
+    position: sticky;
+    top: 0;
+    width: 40px;
+}
+
+.data-grid-table-header-label {
+    font-size: 18px;
+    white-space: nowrap;
+    color: #111;
+    font-weight: 500;
+    padding-left: 10px
+}
+
+.data-grid-table-body {
+    
+}
+
+.data-grid-table-body-row {
+    
+}
+
+.data-grid-table-body-column {
+    
+}
+
+.data-grid-table-body-column-label {
+    font-size: 18px;
+    white-space: wrap;
+    color: #033d58;
+    padding-left: 5px;
+    padding-left: 10px
+}
+
+.data-grid-table-body-check-column {
+    width: 40px;
+}
+
+.data-grid-check-box {
+    display: block !important;
+    appearance: revert !important;
+    content: unset !important;
+    margin: auto !important;
+    transform: scale(1.5); 
+    padding: auto;
+}
+
+.data-grid-check-box::after,.data-grid-check-box::before {
+    display: none !important;
+}
+
+.data-grid-body-column-button {
+    font-size: 18px;
+    margin: auto;
+    margin-right: 10px;
+    cursor: pointer;
+    margin-right: 10px;
+    pointer-events: all;
+}

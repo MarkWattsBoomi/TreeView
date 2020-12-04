@@ -3,7 +3,7 @@ import * as React from 'react';
 
 declare const manywho: any;
 
-export default class ListExport extends FlowComponent {
+export default class ModelExport extends FlowComponent {
 
     constructor(props: any) {
         super(props);
@@ -48,35 +48,24 @@ export default class ListExport extends FlowComponent {
 
     export(e: any) {
         let file: string = '';
+        let body: string = '';
+        let headers: string = '';
         let row: string = '';
         const cols: Map<string,FlowDisplayColumn> = new Map();
         this.model.displayColumns.forEach((col: FlowDisplayColumn) => {
             cols.set(col.developerName, col);
         });
 
-        cols.forEach((col: FlowDisplayColumn) => {
-            if (row.length > 0) {
-                row += ',';
-            }
-            row += '"' + col.label + '"';
-        });
-        file += row + '\r\n';
-
         this.model.dataSource.items.forEach((item: FlowObjectData) => {
-            row = '';
-            cols.forEach((element: any) => {
-                if (row.length > 0) {
-                    row += ',';
-                }
-                switch(item.properties[element.name].contentType){
-
-                    default:
-                        
-                }
-                row += '"' + item.properties[element.name].value + '"';
-            });
-            file += row + '\r\n';
+            
+            if(headers.length === 0){
+                headers = this.buildHeaders(cols,item);
+            }
+            row = this.buildRow(cols,item)
+            body += row;
         });
+
+        file = headers + body;
 
         const blob = new Blob([file], { type: 'text/csv' });
         if (navigator.msSaveBlob) { // IE 10+
@@ -97,40 +86,62 @@ export default class ListExport extends FlowComponent {
 
     }
 
-    async downloadIFN() {
-        /*
-        const parts: string[] = this.IFN.content.split(',');
-        const header: string = parts[0];
-        let body: string = parts[1];
-        const hBits: string[] = header.split(';');
-        const isB64: boolean = hBits[1].toLowerCase() === 'base64';
-        const mBits: string[] = hBits[0].split(':');
-        const dataFlag: boolean = mBits[0].toLowerCase() === 'data';
-        const mime: string = mBits[1];
+    buildHeaders(cols: Map<string,FlowDisplayColumn>, values: FlowObjectData) : string {
+        let headers: string = "";
+        cols.forEach((col: FlowDisplayColumn) => {
+            switch(col.contentType){
+                case eContentType.ContentList:
+                    let children: FlowObjectDataArray = values.properties[col.developerName].value as FlowObjectDataArray;
+                    children.items.forEach((item: FlowObjectData) => {
+                        if (headers.length > 0) {
+                            headers += ',';
+                        }
+                        headers += '"' + item.properties["ATTRIBUTE_NAME"].value + '"';
+                    });
+                    
+                    break;
 
-        if (isB64 === true) {
-            body = Base64.decode(body);
-        }
-
-        const blob = new Blob([body], { type: mime });
-        if (navigator.msSaveBlob) { // IE 10+
-            navigator.msSaveBlob(blob, this.IFN.fileName);
-        } else {
-            const link = document.createElement('a');
-            if (link.download !== undefined) { // feature detection
-                // Browsers that support HTML5 download attribute
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', this.IFN.fileName);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                default:
+                    if (headers.length > 0) {
+                        headers += ',';
+                    }
+                    headers += '"' + col.label + '"';
+                    break;
             }
-        }
-        */
+           
+        });
+        headers += '\r\n';
+        return headers;
+    }
+
+    buildRow(cols: Map<string,FlowDisplayColumn>, values: FlowObjectData) : string { 
+        let row: string = ""
+        cols.forEach((col: FlowDisplayColumn) => {
+            switch(col.contentType){
+                case eContentType.ContentList:
+                    let children: FlowObjectDataArray = values.properties[col.developerName].value as FlowObjectDataArray;
+                    children.items.forEach((item: FlowObjectData) => {
+                        if (row.length > 0) {
+                            row += ',';
+                        }
+                        row += '"' + item.properties["ATTRIBUTE_VALUE"].value + '"';
+                    });
+                    
+                    break;
+
+                default:
+                    if (row.length > 0) {
+                        row += ',';
+                    }
+                    row += '"' + values.properties[col.developerName].value + '"';
+                    break;
+            }
+           
+        });
+        row += '\r\n';
+        return row;
     }
 
 }
 
-manywho.component.register('ListExport', ListExport);
+manywho.component.register('ModelExport', ModelExport);
