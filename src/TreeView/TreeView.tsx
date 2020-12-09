@@ -247,6 +247,13 @@ export default class TreeView extends FlowComponent {
                 null,
             );
         }
+
+        this.expandToSelected();
+        this.expandToFilter();
+        this.treeViewNodes.forEach((node: TreeViewNode) => {
+            node.forceUpdate();
+        })
+        this.forceUpdate();
     }
    
 
@@ -565,16 +572,16 @@ export default class TreeView extends FlowComponent {
     //////////////////////////////////////////////////////////////
     buildTree(nodes: Map<number, TreeViewItem>) : Array<any>{
         let start: number = new Date().getTime();
-        this.expandToSelected();
-        this.expandToFilter();
+        //this.expandToSelected();
+        //this.expandToFilter();
         const elements: Array<any> = [];
         if(nodes) {
             nodes.forEach((node: TreeViewItem) => {
                 let children: Array<any> = this.buildTree(node.children);
                 let expanded: boolean = this.defaultExpanded
-                if(this.expansionPath.indexOf(node.itemId)>=0 || this.filterExpansionPath.indexOf(node.itemId)>=0){
-                    expanded=true;
-                }
+                //if(this.expansionPath.indexOf(node.itemId)>=0 || this.filterExpansionPath.indexOf(node.itemId)>=0){
+                //    expanded=true;
+                //}
                 elements.push(
                     <TreeViewNode 
                         key={node.itemId}
@@ -646,6 +653,12 @@ export default class TreeView extends FlowComponent {
         else {
             this.matchingNodes = undefined;
         }
+        this.buildTree(this.nodeTree);
+        this.expandToSelected();
+        this.expandToFilter();
+        this.treeViewNodes.forEach((node: TreeViewNode) => {
+            node.forceUpdate();
+        });
         this.forceUpdate();
     }
 

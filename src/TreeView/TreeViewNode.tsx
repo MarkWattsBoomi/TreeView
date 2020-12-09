@@ -161,7 +161,7 @@ export default class TreeViewNode extends React.Component<any, any> {
         if((this.props.children && (this.props.children as Array<any>).length > 0) || this.props.expanded===true)
         {
             let expanderIcon: string="plus";
-            if(this.expanded === true || this.props.expanded===true)
+            if(this.expanded === true || root.expansionPath.indexOf(this.props.nodeId) >= 0 || root.filterExpansionPath.indexOf(this.props.nodeId) >= 0)
             {
                 expanderIcon="minus";
                 content = this.props.children;
