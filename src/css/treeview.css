@@ -179,7 +179,7 @@
     border-radius: 10px;
 }
 
-.treeview-node-item:not(.treeview-node-item-selected):hover {
+.treeview-node-item:not(.treeview-node-item-selected):not(.treeview-node-noselect):hover {
     background-color: #ddd;
     color: #666;
     cursor: pointer;
@@ -270,5 +270,10 @@
     margin: auto;
     line-height: 1.2;
     font-family: 'Fieldwork Geo Regular', Tahoma;
+}
+
+.treeview-node-noselect {
+    color: #ccc !important;
+    cursor: default;
 }
 

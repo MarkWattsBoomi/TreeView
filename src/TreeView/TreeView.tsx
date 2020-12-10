@@ -479,9 +479,18 @@ export default class TreeView extends FlowComponent {
             node.itemName = item.properties["ITEM_NAME"]?.value as string;
             node.itemDescription = item.properties["ITEM_DESCRIPTION"]?.value as string;
             node.itemStatus = item.properties["ITEM_STATUS"]?.value as string;
+            node.itemLocked = item.properties["IS_LOCKED"]?.value as string;
+            node.itemSelectable = item.properties["SELECTABLE_CHILDREN"]?.value as string;
             node.itemType = item.properties["ITEM_TYPE"]?.value as string;
             node.children = new Map();
             node.objectData = item;
+            if(item.properties["IS_LOCKED"]?.value === "Y" || item.properties["SELECTABLE_CHILDREN"]?.value === "N") {
+                console.log("locked=" + item.properties["ITEM_NAME"]?.value);
+            }
+
+            if(node.itemId===417884) {
+                console.log("locked=" + item.properties["ITEM_NAME"]?.value);
+            }
 
             //add to flat tree for easy searching
             this.flatTree.set(node.itemId,node);

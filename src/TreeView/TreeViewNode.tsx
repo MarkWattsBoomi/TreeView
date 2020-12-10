@@ -145,6 +145,12 @@ export default class TreeViewNode extends React.Component<any, any> {
         this.showDialog(node.itemName,content,this.hideDialog,[new modalDialogButton("Close",this.hideDialog)])
     }
 
+    onSelect(e: any) {
+        const root: TreeView = this.props.root;
+        const node: TreeViewItem = root.flatTree.get(this.props.nodeId); 
+        root.doOutcome("OnSelect",node);
+    }
+
     render() {
         let expander: any;
         let content: any;
@@ -272,10 +278,15 @@ export default class TreeViewNode extends React.Component<any, any> {
                 />
             );
         }
+
+        let onSelect: any;
+        if(node.isSelectable() === true) {
+            onSelect = this.onSelect;
+        }
         
         return( 
             <div
-                className={"treeview-node " + node.getStyle()}
+                className={"treeview-node "}
                 style={style}
                 title={node.itemDescription}
                 onContextMenu={(e: any) => {e.preventDefault()}}
@@ -289,8 +300,8 @@ export default class TreeViewNode extends React.Component<any, any> {
                         {expander}
                     </div>
                     <div
-                        className={"treeview-node-item" + selectedClass}
-                        onClick={(e: any) => {root.doOutcome("OnSelect",node)}}
+                        className={"treeview-node-item" + selectedClass + node.getStyle()}
+                        onClick={(e: any) => {onSelect}}
                         title={node.itemDescription}
                         draggable={this.props.allowRearrange}
                         onDragStart={(e) => {root.onDrag(e,node.itemId); }}

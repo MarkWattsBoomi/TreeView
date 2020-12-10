@@ -9,6 +9,8 @@ export default class TreeViewItem {
     itemDescription: string = "";
     itemIcon: string = "";
     itemStatus: string = "";
+    itemLocked: string = "";
+    itemSelectable: string = "";
     itemLevel: number = 0;
     itemType: string = "";
     children: Map<number,TreeViewItem> = new Map();
@@ -22,34 +24,59 @@ export default class TreeViewItem {
     }
 
     isEnabled(): boolean {
+        let enabled: boolean = true;
         if(this.itemStatus && this.itemStatus.length > 0){
             switch(this.itemStatus.toUpperCase()) {
                 case "LOCKED":
                 case "DISABLED":
                 case "READONLY":
-                    return false;
-                
-                case "UNLOCKED":
-                case "ENABLED":
-                case "EDITABLE":
-                case "WRITABLE":
-                    return true;
-
-                default:
-                    return true;
+                    enabled = false;
+                    break;
             }
         }
-        else {
-            return true;
+        if(this.isSelectable() === false) {
+            enabled = false;
         }
+        return enabled;
     }
 
+    isSelectable(): boolean {
+        let selectable: boolean = true;
+        if(this.itemLocked && this.itemLocked.length > 0){
+            switch(this.itemLocked.toUpperCase()) {
+                case "Y":
+                case "YES":
+                case "TRUE":
+                    selectable = false;
+                    break;
+            }
+        }
+
+        if(this.itemSelectable && this.itemSelectable.length > 0){
+            switch(this.itemSelectable.toUpperCase()) {
+                case "N":
+                case "NO":
+                case "FALSE":
+                    selectable = false;
+                    break;
+            }
+        }
+
+        return selectable;
+        
+    }
+
+
     getStyle() : string {
+        let style: string = "";
         if(this.itemStatus && this.itemStatus.length > 0){
-            return "nodestyle_" + this.itemStatus.toLowerCase();
+            style += " nodestyle_" + this.itemStatus.toLowerCase();
         }
-        else {
-            return "";
+
+        if(this.isSelectable()===false) {
+            style += " treeview-node-noselect";
         }
+        
+        return style;
     }
 }
