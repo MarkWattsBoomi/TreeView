@@ -488,10 +488,6 @@ export default class TreeView extends FlowComponent {
                 console.log("locked=" + item.properties["ITEM_NAME"]?.value);
             }
 
-            if(node.itemId===417884) {
-                console.log("locked=" + item.properties["ITEM_NAME"]?.value);
-            }
-
             //add to flat tree for easy searching
             this.flatTree.set(node.itemId,node);
         });
