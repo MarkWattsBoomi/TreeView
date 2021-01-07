@@ -460,7 +460,35 @@ export default class TreeView extends FlowComponent {
         return content;
     }
 
-    
+    flatTreeFind(itemId: number) : TreeViewItem | undefined {
+        if(this.flatTree.has(itemId)) {
+            return this.flatTree.get(itemId);
+        }
+        else {
+            for(let key of Array.from( this.flatTree.keys())) {
+                let parent: TreeViewItem = this.flatTreeFindChildren(this.flatTree.get(key).children, itemId);
+                if(parent) {
+                    return parent;
+                }
+            }
+            return undefined;
+        }
+    }
+
+    flatTreeFindChildren(children: Map<number, TreeViewItem>, itemId:  number) : TreeViewItem | undefined {
+        if(children.has(itemId)) {
+            return children.get(itemId);
+        }
+        else {
+            for(let key of Array.from( children.keys())) {
+                let parent: TreeViewItem = this.flatTreeFindChildren(children.get(key).children, itemId);
+                if(parent) {
+                    return parent;
+                }
+            }
+            return undefined;
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // constructs the nodeTree and a flat a map of TreeViewItems from the model datasource data
@@ -506,7 +534,7 @@ export default class TreeView extends FlowComponent {
 
         this.flatTree.forEach((item: TreeViewItem) => {
 
-            let parent = this.flatTree.get(item.parentItemId);
+            let parent = this.flatTreeFind(item.parentItemId); //this.flatTree.get(item.parentItemId);
             if(parent) {
                 item.setItemLevel(parent.itemLevel + 1);
                 parent.children.set(item.itemId, item);
@@ -613,9 +641,9 @@ export default class TreeView extends FlowComponent {
         let maxResults: number = 30;
         let criteria: string = this.searchBox?.value;
         if(criteria?.length > 0) {
-            if(criteria.length < 4) {
+            if(criteria.length < 3) {
                 let content: any = (
-                    <span>Searching with less than 4 characters is not permitted.</span>
+                    <span>Searching with less than 3 characters is not permitted.</span>
                 );
                 this.matchingNodes = undefined;
                 this.showMessageBox("Search Criteria Restriction",content,this.hideMessageBox,[new modalDialogButton("Ok",this.hideMessageBox)]);

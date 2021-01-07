@@ -35,6 +35,7 @@ export default class TreeViewNode extends React.Component<any, any> {
         this.showDialog = this.showDialog.bind(this);
         this.hideDialog = this.hideDialog.bind(this);
         this.showInfo = this.showInfo.bind(this);
+        this.onSelect = this.onSelect.bind(this);
         this.expanded = this.props.expanded || false;
     }
 
@@ -301,7 +302,7 @@ export default class TreeViewNode extends React.Component<any, any> {
                     </div>
                     <div
                         className={"treeview-node-item" + selectedClass + node.getStyle()}
-                        onClick={(e: any) => {onSelect}}
+                        onClick={onSelect}
                         title={node.itemDescription}
                         draggable={this.props.allowRearrange}
                         onDragStart={(e) => {root.onDrag(e,node.itemId); }}

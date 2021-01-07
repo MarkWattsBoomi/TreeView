@@ -356,6 +356,7 @@ export default class SelectView extends FlowComponent {
             });
         }
         this.pushSelectedToState();
+        this.doOutcome("OnSelect");
         this.forceUpdate();
     }
     //////////////////////////////////////////////////////////////
