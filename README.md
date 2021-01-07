@@ -325,4 +325,23 @@ Set the component's label value to the text you want to display in the popup tit
 Set the component's content value to the html you want to display in the popup body.
 
 
+# NavigationOverride
+
+## Functionality
+
+The component will hide any navigation menu items whose display label matches one of the values specifiied in the hideElements attribute..
+
+Works for both top level menu items and child ones.
+
+It's page scoped and doesn't affect navigation overrides in Flow, it just forcably hides the nominated items regardless.
+
+
+## Settings
+
+Set the component's "hideElements" attribute to a string of navigation menu item labels (not their links).
+
+The string can be comma, semi colon, colon or pipe delimited e.g. "home, element1 ; element2 ||||| element 3" etc.
+
+labels are case insensitive
+
 
