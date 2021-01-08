@@ -7,7 +7,7 @@ import { MessageBox } from '../MessageBox/MessageBox';
 //declare const manywho: IManywho;
 declare const manywho: any;
 
-export default class NavigationOverride extends FlowComponent {
+export default class NavigationWarning extends FlowComponent {
     version: string="1.0.0";
     context: any;
     debugLevel: eDebugLevel = eDebugLevel.error;
@@ -18,12 +18,19 @@ export default class NavigationOverride extends FlowComponent {
     msgboxContent: any;
     msgboxOnClose: any;
 
+    mapElementId: string;
+    navId: string;
+    nav: Map<string,any> = new Map();
+    clickedMenuItem: any;
+
     constructor(props: any) {
         super(props);
         this.flowMoved = this.flowMoved.bind(this);
         this.showMessageBox = this.showMessageBox.bind(this);
         this.hideMessageBox = this.hideMessageBox.bind(this);
         this.click = this.click.bind(this);
+        this.continue = this.continue.bind(this);
+        this.cancel = this.cancel.bind(this);
     }
 
     async showMessageBox(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
@@ -73,32 +80,61 @@ export default class NavigationOverride extends FlowComponent {
     click(ev: any) {
         ev.preventDefault();
         ev.stopPropagation();
-
-        console.log("click");
-
+        this.clickedMenuItem = ev.target;
         this.showMessageBox(
-            this.model.developerName,
+            this.model.label || this.model.developerName,
             (<div dangerouslySetInnerHTML={{ __html: this.model.content }} />), 
             this.hideMessageBox,
-            [new modalDialogButton("Ok",this.hideMessageBox)]
+            [new modalDialogButton("Continue",this.continue),new modalDialogButton("Cancel",this.cancel)]
         );
 
     }
 
+    continue() {
+        this.hideMessageBox();
+        let nav = this.nav.get(this.clickedMenuItem.id);
+        manywho.engine.navigate(this.navId,nav.id, nav.locationMapElementId, this.flowKey);
+        this.clickedMenuItem = undefined;
+    }
+
+    cancel() {
+        this.hideMessageBox();
+        this.clickedMenuItem = undefined;
+    }
+
     butcherNavbar() {
 
+        this.nav.clear();
+
         //My attributes should contain hideElements each of which needs to be made invisible
-        let hides: string = this.getAttribute("hideElements","");
+        let hides: string = this.getAttribute("warnElements","");
         let menuItems: string[] = hides.split(/[:;|,]+/).map(item => item.toLowerCase()).map(item => item.trim());
         
+        // get nav id from dom
+        this.navId= document.querySelectorAll(".navbar .navbar-collapse")[0].id;
+
+        // get navigation object from flow containing all nav elements
+        let nav = manywho.model.getNavigation(this.navId, this.flowKey);
+
+        // build a map of nav element keyed on id - only include those which we handle
+        this.nav = new Map();
+        Object.values(nav.items).forEach((entry: any) => {
+            if(menuItems.indexOf(entry.label.toLowerCase()) >= 0) {
+                this.nav.set(entry.id, entry);
+            }
+        });
+        
+        
+        // go throught all dom elements hi-jacking their onClick if we handle them
         let elements: NodeListOf<Element> = document.querySelectorAll(".nav a");
         if(elements.length > 0) {
             for(let pos = 0 ; pos < elements.length ; pos ++) {
                 if(menuItems.indexOf(elements.item(pos).textContent.toLowerCase()) >= 0) {
-                    (elements.item(pos) as HTMLElement).style.display="none";
+                    (elements.item(pos) as HTMLElement).onclick = this.click;
                 }
             }  
         }
+    
     }
 
    
@@ -122,4 +158,4 @@ export default class NavigationOverride extends FlowComponent {
 
 }
 
-manywho.component.register('NavigationOverride', NavigationOverride);
+manywho.component.register('NavigationWarning', NavigationWarning);

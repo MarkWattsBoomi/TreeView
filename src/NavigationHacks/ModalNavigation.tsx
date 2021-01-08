@@ -20,6 +20,7 @@ export default class ModalNavigation extends FlowComponent {
 
     constructor(props: any) {
         super(props);
+        this.flowMoved = this.flowMoved.bind(this);
         this.showMessageBox = this.showMessageBox.bind(this);
         this.hideMessageBox = this.hideMessageBox.bind(this);
         this.click = this.click.bind(this);
