@@ -18,6 +18,10 @@ export default class NavigationOverride extends FlowComponent {
     msgboxContent: any;
     msgboxOnClose: any;
 
+    hiddenElements: any[] = [];
+
+    unloading: boolean = false;
+
     constructor(props: any) {
         super(props);
         this.flowMoved = this.flowMoved.bind(this);
@@ -62,11 +66,16 @@ export default class NavigationOverride extends FlowComponent {
         await super.componentDidMount();
         
         (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
+        this.unloading = false;
         this.butcherNavbar();
     }
 
     async componentWillUnmount() {
         await super.componentWillUnmount();
+        this.unloading = true;
+        this.hiddenElements.forEach((element: any) => {
+            element.style.display="block";
+        });
         (manywho as any).eventManager.removeDoneListener(this.componentId);
     }
 
@@ -86,15 +95,18 @@ export default class NavigationOverride extends FlowComponent {
     }
 
     butcherNavbar() {
-
+        if(this.unloading === true) {
+            return;
+        }
         //My attributes should contain hideElements each of which needs to be made invisible
         let hides: string = this.getAttribute("hideElements","");
         let menuItems: string[] = hides.split(/[:;|,]+/).map(item => item.toLowerCase()).map(item => item.trim());
-        
+        this.hiddenElements = [];
         let elements: NodeListOf<Element> = document.querySelectorAll(".nav a");
         if(elements.length > 0) {
             for(let pos = 0 ; pos < elements.length ; pos ++) {
                 if(menuItems.indexOf(elements.item(pos).textContent.toLowerCase()) >= 0) {
+                    this.hiddenElements.push(elements.item(pos) as HTMLElement);
                     (elements.item(pos) as HTMLElement).style.display="none";
                 }
             }  
