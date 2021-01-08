@@ -23,6 +23,9 @@ export default class NavigationWarning extends FlowComponent {
     nav: Map<string,any> = new Map();
     clickedMenuItem: any;
 
+    modifiedElements: any[] = [];
+    unloading: boolean = false;
+
     constructor(props: any) {
         super(props);
         this.flowMoved = this.flowMoved.bind(this);
@@ -69,11 +72,16 @@ export default class NavigationWarning extends FlowComponent {
         await super.componentDidMount();
         
         (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
+        this.unloading = false;
         this.butcherNavbar();
     }
 
     async componentWillUnmount() {
         await super.componentWillUnmount();
+        this.unloading = true;
+        this.modifiedElements.forEach((element: HTMLElement) => {
+            element.onclick = undefined;
+        });
         (manywho as any).eventManager.removeDoneListener(this.componentId);
     }
 
@@ -104,6 +112,10 @@ export default class NavigationWarning extends FlowComponent {
 
     butcherNavbar() {
 
+        if(this.unloading === true) {
+            return;
+        }
+
         this.nav.clear();
 
         //My attributes should contain hideElements each of which needs to be made invisible
@@ -126,10 +138,12 @@ export default class NavigationWarning extends FlowComponent {
         
         
         // go throught all dom elements hi-jacking their onClick if we handle them
+        this.modifiedElements = [];
         let elements: NodeListOf<Element> = document.querySelectorAll(".nav a");
         if(elements.length > 0) {
             for(let pos = 0 ; pos < elements.length ; pos ++) {
                 if(menuItems.indexOf(elements.item(pos).textContent.toLowerCase()) >= 0) {
+                    this.modifiedElements.push(elements.item(pos) as HTMLElement);
                     (elements.item(pos) as HTMLElement).onclick = this.click;
                 }
             }  
