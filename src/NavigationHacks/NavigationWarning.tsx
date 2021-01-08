@@ -85,7 +85,7 @@ export default class NavigationWarning extends FlowComponent {
             this.model.label || this.model.developerName,
             (<div dangerouslySetInnerHTML={{ __html: this.model.content }} />), 
             this.hideMessageBox,
-            [new modalDialogButton("Continue",this.continue),new modalDialogButton("Cancel",this.cancel)]
+            [new modalDialogButton(this.getAttribute("continueLabel","Continue"),this.continue),new modalDialogButton(this.getAttribute("cancelLabel","Cancel"),this.cancel)]
         );
 
     }
