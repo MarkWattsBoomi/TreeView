@@ -179,7 +179,7 @@
     border-radius: 10px;
 }
 
-.treeview-node-item:not(.treeview-node-item-selected):not(.treeview-node-noselect):hover {
+.treeview-node-item:not(.treeview-node-item-selected):hover {
     background-color: #ddd;
     color: #666;
     cursor: pointer;
@@ -274,6 +274,6 @@
 
 .treeview-node-noselect {
     color: #ccc !important;
-    cursor: default;
+    cursor: pointer;
 }
 

@@ -279,11 +279,6 @@ export default class TreeViewNode extends React.Component<any, any> {
                 />
             );
         }
-
-        let onSelect: any;
-        if(node.isSelectable() === true) {
-            onSelect = this.onSelect;
-        }
         
         return( 
             <div
@@ -302,7 +297,7 @@ export default class TreeViewNode extends React.Component<any, any> {
                     </div>
                     <div
                         className={"treeview-node-item" + selectedClass + node.getStyle()}
-                        onClick={onSelect}
+                        onClick={this.onSelect}
                         title={node.itemDescription}
                         draggable={this.props.allowRearrange}
                         onDragStart={(e) => {root.onDrag(e,node.itemId); }}

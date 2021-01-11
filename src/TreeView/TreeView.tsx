@@ -112,6 +112,7 @@ export default class TreeView extends FlowComponent {
         this.setNode = this.setNode.bind(this);
         this.showContextMenu = this.showContextMenu.bind(this);
         this.hideContextMenu = this.hideContextMenu.bind(this);  
+        this.showAll = this.showAll.bind(this);
         this.filterTree = this.filterTree.bind(this);
         this.filterTreeClear = this.filterTreeClear.bind(this);
         this.expandToSelected = this.expandToSelected.bind(this);
@@ -161,11 +162,18 @@ export default class TreeView extends FlowComponent {
         this.refreshSelectedFromState();
     }
 
-    refreshSelectedFromState() {
+    async refreshSelectedFromState() {
         let state: FlowObjectData = this.getStateValue() as FlowObjectData;
         this.selectedNodeId = undefined;
         if(state) {
             this.selectedNodeId=state.properties["ITEM_ID"].value as number;
+        }
+        else {
+            //if no state then try clicked one
+            if(this.getAttribute("ClickedState")) {
+                let clickedState = await this.loadValue(this.getAttribute("ClickedState"));
+                this.selectedNodeId=(clickedState.value as FlowObjectData).properties["ITEM_ID"].value as number;
+            }
         }
         this.expandToSelected();
         this.forceUpdate();
@@ -229,7 +237,21 @@ export default class TreeView extends FlowComponent {
             (this.outcomes[outcomeName]?.pageActionBindingType !== ePageActionBindingType.NoSave 
                 && node )) 
         {
-            await this.setStateValue(node.objectData);
+            // if selectable then set state value otherwise clear it
+            if(node.isSelectable() === true) {
+                await this.setStateValue(node.objectData);
+            }
+            else {
+                await this.setStateValue(undefined);
+            }
+
+            // if there's a clicked state attribute then set it
+            if(this.getAttribute("ClickedState")) {
+                let clickedState = await this.loadValue(this.getAttribute("ClickedState"));
+                clickedState.value = node.objectData;
+                await this.updateValues(clickedState);
+            }
+            
             this.selectedNodeId = node.itemId;
         }
         
@@ -440,7 +462,7 @@ export default class TreeView extends FlowComponent {
                 <span 
                     key="EXPAND"
                     className={"glyphicon glyphicon-plus treeview-header-button"} 
-                    title={"Expand All"}
+                    title={"Expand Next Level"}
                     onClick={this.expand}
                 />
             );
@@ -637,8 +659,13 @@ export default class TreeView extends FlowComponent {
         return elements;
     }
 
-    filterTree() {
-        let maxResults: number = 30;
+    showAll(e: any) {
+        this.hideMessageBox();
+        this.filterTree(true);
+    }
+
+    filterTree(showAll : boolean = false) {
+        
         let criteria: string = this.searchBox?.value;
         if(criteria?.length > 0) {
             if(criteria.length < 3) {
@@ -659,15 +686,26 @@ export default class TreeView extends FlowComponent {
                 });
                 this.debug(this.matchingNodes.toString(), eDebugLevel.verbose);
                 switch(true) {
-                    case this.matchingNodes.length >= this.maxResults:
+                    case this.matchingNodes.length >= this.maxResults && showAll === true:
+                        //do nothing
+                        break;
+
+                    case this.matchingNodes.length >= this.maxResults && showAll === false:
                         let totResults: number = this.matchingNodes.length;
                         this.matchingNodes = this.matchingNodes.slice(0,this.maxResults);
-                        this.showMessageBox("Search Results Truncated",
+                        this.showMessageBox("High Result Count Warning",
                             (<div>
-                                <span>{"The search returned too many results"}</span>
-                                <span>{"only the first " + this.maxResults + " of a possible " + totResults + " are being displayed."}</span>
+                                <span>{"Your search returned a large number of matches and could impact performance"}</span>
+                                <br></br>
+                                <br></br>
+                                <span>{"By default only the first " + this.maxResults + " of a possible " + totResults + " will be displayed"}</span>
+                                <br></br>
+                                <br></br>
+                                <span>{"Do you want to see all the results ?"}</span>
+                                <br></br>
+                                <span>{"(This may take some time)"}</span>
                             </div>),
-                            this.hideMessageBox,[new modalDialogButton("Ok",this.hideMessageBox)]
+                            this.hideMessageBox,[new modalDialogButton("Show All",this.showAll),new modalDialogButton("Show Default",this.hideMessageBox)]
                         );
                         break;
 
@@ -827,7 +865,7 @@ export default class TreeView extends FlowComponent {
                         </input>
                         <span 
                             className={"glyphicon glyphicon-search treeview-header-search-button"}
-                            onClick={this.filterTree}
+                            onClick={(e: any) => {this.filterTree(false)}}
                         />
                         <span 
                             className={"glyphicon glyphicon-remove treeview-header-search-button"}
