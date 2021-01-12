@@ -1,8 +1,7 @@
 import React, { CSSProperties } from 'react';
 
-import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField } from 'flow-component-model';
+import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField, MessageBox } from 'flow-component-model';
 import '../css/DataGrid.css';
-import { MessageBox } from '../MessageBox/MessageBox';
 import ContextMenu from '../ContextMenu/ContextMenu';
 import { eDebugLevel } from '..';
 import { DataGridColumn, DataGridItem } from './DataGridItem';

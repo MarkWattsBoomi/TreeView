@@ -1,7 +1,7 @@
-import { eLoadingState, FlowComponent, modalDialogButton } from 'flow-component-model';
+import { eLoadingState, FlowComponent, MessageBox, modalDialogButton } from 'flow-component-model';
 import React, { CSSProperties } from 'react';
 import { eDebugLevel } from '..';
-import { MessageBox } from '../MessageBox/MessageBox';
+
 
 
 //declare const manywho: IManywho;
@@ -12,12 +12,6 @@ export default class NavigationOverride extends FlowComponent {
     context: any;
     debugLevel: eDebugLevel = eDebugLevel.error;
 
-    msgboxVisible: boolean = false;
-    msgboxTitle: string = '';
-    msgboxButtons: any = [];
-    msgboxContent: any;
-    msgboxOnClose: any;
-
     hiddenElements: any[] = [];
 
     unloading: boolean = false;
@@ -25,28 +19,10 @@ export default class NavigationOverride extends FlowComponent {
     constructor(props: any) {
         super(props);
         this.flowMoved = this.flowMoved.bind(this);
-        this.showMessageBox = this.showMessageBox.bind(this);
-        this.hideMessageBox = this.hideMessageBox.bind(this);
         this.click = this.click.bind(this);
     }
 
-    async showMessageBox(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.msgboxVisible = true;
-        this.msgboxTitle = title;
-        this.msgboxContent = content;
-        this.msgboxOnClose = onClose;
-        this.msgboxButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideMessageBox() {
-        this.msgboxVisible = false;
-        this.msgboxTitle = '';
-        this.msgboxContent = undefined;
-        this.msgboxOnClose = undefined;
-        this.msgboxButtons = [];
-        return this.forceUpdate();
-    }
+    
     
     async flowMoved(xhr: any, request: any) {
         let me: any = this;

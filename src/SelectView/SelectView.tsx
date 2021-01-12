@@ -1,8 +1,7 @@
 import React, { CSSProperties } from 'react';
 
-import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField } from 'flow-component-model';
+import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField, MessageBox } from 'flow-component-model';
 import '../css/SelectView.css';
-import { MessageBox } from '../MessageBox/MessageBox';
 import ContextMenu from '../ContextMenu/ContextMenu';
 import { eDebugLevel } from '..';
 import SelectViewRow from './SelectViewRow';
@@ -27,19 +26,6 @@ export default class SelectView extends FlowComponent {
     colComponents: Map<string,SelectViewHeader> = new Map();
     colElements: Array<SelectViewHeader> = [];
 
-    dialogVisible: boolean = false;
-    dialogTitle: string = '';
-    dialogButtons: any = [];
-    dialogContent: any;
-    dialogOnClose: any;
-    dialogForm: any;
-
-    msgboxVisible: boolean = false;
-    msgboxTitle: string = '';
-    msgboxButtons: any = [];
-    msgboxContent: any;
-    msgboxOnClose: any;
-
     contextMenu: any;
 
     matchingRows:  Map<string,string> = new Map();
@@ -47,53 +33,12 @@ export default class SelectView extends FlowComponent {
     lastContent: any = (<div></div>);
 
     searchBox: HTMLInputElement;
-   
-    async showDialog(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.dialogVisible = true;
-        this.dialogTitle = title;
-        this.dialogContent = content;
-        this.dialogOnClose = onClose;
-        this.dialogButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideDialog() {
-        this.dialogVisible = false;
-        this.dialogTitle = '';
-        this.dialogContent = undefined;
-        this.dialogOnClose = undefined;
-        this.dialogButtons = [];
-        this.dialogForm = undefined;
-        return this.forceUpdate();
-    }
-
-    async showMessageBox(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.msgboxVisible = true;
-        this.msgboxTitle = title;
-        this.msgboxContent = content;
-        this.msgboxOnClose = onClose;
-        this.msgboxButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideMessageBox() {
-        this.msgboxVisible = false;
-        this.msgboxTitle = '';
-        this.msgboxContent = undefined;
-        this.msgboxOnClose = undefined;
-        this.msgboxButtons = [];
-        return this.forceUpdate();
-    }
-    
+       
 
     constructor(props: any) {
         super(props);
 
         this.handleMessage = this.handleMessage.bind(this);
-        this.showDialog = this.showDialog.bind(this);
-        this.hideDialog = this.hideDialog.bind(this);
-        this.showMessageBox = this.showMessageBox.bind(this);
-        this.hideMessageBox = this.hideMessageBox.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
         this.flowMoved = this.flowMoved.bind(this);
         this.doOutcome = this.doOutcome.bind(this);

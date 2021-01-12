@@ -1,8 +1,7 @@
 import React, { CSSProperties } from 'react';
 
-import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType } from 'flow-component-model';
+import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, MessageBox } from 'flow-component-model';
 import '../css/treeview.css';
-import { MessageBox } from '../MessageBox/MessageBox';
 import TreeViewNode from './TreeViewNode';
 import TreeViewItem from './TreeViewItem';
 import ContextMenu from '../ContextMenu/ContextMenu';
@@ -28,19 +27,6 @@ export default class TreeView extends FlowComponent {
     treeViewNodes: Map<number,TreeViewNode> = new Map();
     flatTree: Map<number,TreeViewItem> = new Map();
 
-    dialogVisible: boolean = false;
-    dialogTitle: string = '';
-    dialogButtons: any = [];
-    dialogContent: any;
-    dialogOnClose: any;
-    dialogForm: any;
-
-    msgboxVisible: boolean = false;
-    msgboxTitle: string = '';
-    msgboxButtons: any = [];
-    msgboxContent: any;
-    msgboxOnClose: any;
-
     draggedNode: number;
 
     contextMenu: any;
@@ -58,52 +44,11 @@ export default class TreeView extends FlowComponent {
     maxResults: number = 30;
     absoluteMaxResults: number = 1000;
    
-    async showDialog(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.dialogVisible = true;
-        this.dialogTitle = title;
-        this.dialogContent = content;
-        this.dialogOnClose = onClose;
-        this.dialogButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideDialog() {
-        this.dialogVisible = false;
-        this.dialogTitle = '';
-        this.dialogContent = undefined;
-        this.dialogOnClose = undefined;
-        this.dialogButtons = [];
-        this.dialogForm = undefined;
-        return this.forceUpdate();
-    }
-
-    async showMessageBox(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.msgboxVisible = true;
-        this.msgboxTitle = title;
-        this.msgboxContent = content;
-        this.msgboxOnClose = onClose;
-        this.msgboxButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideMessageBox() {
-        this.msgboxVisible = false;
-        this.msgboxTitle = '';
-        this.msgboxContent = undefined;
-        this.msgboxOnClose = undefined;
-        this.msgboxButtons = [];
-        return this.forceUpdate();
-    }
-    
+        
 
     constructor(props: any) {
         super(props);
 
-        this.handleMessage = this.handleMessage.bind(this);
-        this.showDialog = this.showDialog.bind(this);
-        this.hideDialog = this.hideDialog.bind(this);
-        this.showMessageBox = this.showMessageBox.bind(this);
-        this.hideMessageBox = this.hideMessageBox.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
         this.convertNode = this.convertNode.bind(this);
         this.flowMoved = this.flowMoved.bind(this);

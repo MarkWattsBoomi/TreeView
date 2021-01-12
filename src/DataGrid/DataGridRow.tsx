@@ -1,8 +1,7 @@
 import React, { CSSProperties } from "react";
 
 import DataGrid from "./DataGrid";
-import { FlowDisplayColumn, FlowOutcome, modalDialogButton } from "flow-component-model";
-import { MessageBox } from "../MessageBox/MessageBox";
+import { FlowDisplayColumn, FlowOutcome, MessageBox, modalDialogButton } from "flow-component-model";
 import { DataGridColumn, DataGridItem } from "./DataGridItem";
 
 export default class DataGridRow extends React.Component<any,any> {

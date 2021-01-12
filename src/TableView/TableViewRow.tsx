@@ -1,8 +1,7 @@
 import React, { CSSProperties } from "react";
 import { TableViewColumn, TableViewItem } from "./TableViewItem";
 import TableView from "./TableView";
-import { FlowDisplayColumn, FlowOutcome, modalDialogButton } from "flow-component-model";
-import { MessageBox } from "../MessageBox/MessageBox";
+import { FlowDisplayColumn, FlowOutcome, MessageBox, modalDialogButton } from "flow-component-model";
 
 export default class TableViewRow extends React.Component<any,any> {
     

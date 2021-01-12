@@ -1,24 +1,24 @@
 import React, { CSSProperties } from "react";
 import { SelectViewColumn, SelectViewItem } from "./SelectViewItem";
 import SelectView from "./SelectView";
-import { FlowDisplayColumn, FlowOutcome, modalDialogButton } from "flow-component-model";
-import { MessageBox } from "../MessageBox/MessageBox";
+import { FlowDisplayColumn, FlowOutcome, MessageBox, modalDialogButton } from "flow-component-model";
 
 export default class SelectViewRow extends React.Component<any,any> {
     
-    msgboxVisible: boolean = false;
-    msgboxTitle: string = '';
-    msgboxButtons: any = [];
-    msgboxContent: any;
-    msgboxOnClose: any;
+    //msgboxVisible: boolean = false;
+    //msgboxTitle: string = '';
+    //msgboxButtons: any = [];
+    //msgboxContent: any;
+    //msgboxOnClose: any;
 
     constructor(props: any) {
         super(props);
-        this.showMessageBox = this.showMessageBox.bind(this);
-        this.hideMessageBox = this.hideMessageBox.bind(this);
+        //this.showMessageBox = this.showMessageBox.bind(this);
+        //this.hideMessageBox = this.hideMessageBox.bind(this);
         this.selected = this.selected.bind(this);
     }
 
+    /*
     async showMessageBox(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
         this.msgboxVisible = true;
         this.msgboxTitle = title;
@@ -36,6 +36,7 @@ export default class SelectViewRow extends React.Component<any,any> {
         this.msgboxButtons = [];
         return this.forceUpdate();
     }
+    */
 
     selected(e: any) {
         e.stopPropagation();
@@ -141,14 +142,14 @@ export default class SelectViewRow extends React.Component<any,any> {
         }
         
         let msgbox: any;
-        if (this.msgboxVisible === true) {
+        if (root.msgboxVisible === true) {
             msgbox = (
                 <MessageBox
-                    title={this.msgboxTitle}
-                    buttons={this.msgboxButtons}
-                    onClose={this.msgboxOnClose}
+                    title={root.msgboxTitle}
+                    buttons={root.msgboxButtons}
+                    onClose={root.msgboxOnClose}
                 >
-                    {this.msgboxContent}
+                    {root.msgboxContent}
                 </MessageBox>
             );
         }
