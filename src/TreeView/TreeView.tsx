@@ -56,6 +56,7 @@ export default class TreeView extends FlowComponent {
     searchBox: HTMLInputElement;
 
     maxResults: number = 30;
+    absoluteMaxResults: number = 1000;
    
     async showDialog(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
         this.dialogVisible = true;
@@ -118,6 +119,7 @@ export default class TreeView extends FlowComponent {
         this.expandToSelected = this.expandToSelected.bind(this);
         this.expandToFilter = this.expandToFilter.bind(this);
         this.searchKeyEvent = this.searchKeyEvent.bind(this);
+        this.drawResults = this.drawResults.bind(this);
 
         this.dbg = this.dbg.bind(this);
 
@@ -126,6 +128,7 @@ export default class TreeView extends FlowComponent {
         this.debug("Debug Level = " + this.debugLevel, eDebugLevel.info);
 
         this.maxResults = parseInt(this.getAttribute("MaxSearchResults","30"));
+        this.absoluteMaxResults = parseInt(this.getAttribute("AbsoluteMaxSearchResults","1000"));
     
         this.defaultExpanded=this.getAttribute("StartExpanded","false").toLowerCase() === "true";
     }
@@ -664,6 +667,45 @@ export default class TreeView extends FlowComponent {
         this.filterTree(true);
     }
 
+    noResults() {
+        this.drawResults();
+    }
+
+    maxExceeded() {
+        let tot: number = this.matchingNodes.length;
+        this.matchingNodes = this.matchingNodes.slice(0,this.maxResults);
+        this.showMessageBox("High Result Count Warning",
+            (<div>
+                <span>{"Your search returned a large number of matches and could impact performance"}</span>
+                <br></br>
+                <br></br>
+                <span>{"By default only the first " + this.maxResults + " of a possible " + tot + " will be displayed"}</span>
+                <br></br>
+                <br></br>
+                <span>{"Do you want to see all the results ?"}</span>
+                <br></br>
+                <span>{"(This may take some time)"}</span>
+            </div>),
+            this.hideMessageBox,[new modalDialogButton("Show All",this.showAll),new modalDialogButton("Show Default",this.drawResults)]
+        );
+    }
+
+    absoluteMaxExceeded() {
+        let tot: number = this.matchingNodes.length;
+        this.matchingNodes = this.matchingNodes.slice(0,this.absoluteMaxResults);
+        this.showMessageBox("Extreme High Result Count Warning",
+            (<div>
+                <span>{"Your search returned more than " + this.absoluteMaxResults + " matches and will impact performance"}</span>
+                <br></br>
+                <br></br>
+                <span>{"The results have been truncated"}</span>
+                <br></br>
+                <br></br>
+            </div>),
+            this.hideMessageBox,[new modalDialogButton("Ok",this.drawResults)]
+        );
+    }
+
     filterTree(showAll : boolean = false) {
         
         let criteria: string = this.searchBox?.value;
@@ -679,34 +721,29 @@ export default class TreeView extends FlowComponent {
                 this.matchingNodes = [];
                 //traverse all nodes
                 this.flatTree.forEach((node: TreeViewItem) => {
-                    if((node.itemName.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 || node.itemDescription.toLowerCase().indexOf(criteria.toLowerCase()) >= 0)) {
-                        this.matchingNodes = this.matchingNodes.concat(node.itemId);
-                        this.matchingNodes = this.matchingNodes.filter((item, pos) => this.matchingNodes.indexOf(item) === pos);
+                    if (
+                        (node.itemName.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 || 
+                        node.itemDescription.toLowerCase().indexOf(criteria.toLowerCase()) >= 0)
+                    ) {
+                        this.matchingNodes.push(node.itemId)
+                        //this.matchingNodes = this.matchingNodes.concat(node.itemId);
+                        //this.matchingNodes = this.matchingNodes.filter((item, pos) => this.matchingNodes.indexOf(item) === pos);
                     }
                 });
-                this.debug(this.matchingNodes.toString(), eDebugLevel.verbose);
+                
                 switch(true) {
+
+                    // over abs max.  truncate and warn
+                    case this.matchingNodes.length >= this.absoluteMaxResults:
+                        this.absoluteMaxExceeded();
+                        break;
+
                     case this.matchingNodes.length >= this.maxResults && showAll === true:
-                        //do nothing
+                        this.drawResults();
                         break;
 
                     case this.matchingNodes.length >= this.maxResults && showAll === false:
-                        let totResults: number = this.matchingNodes.length;
-                        this.matchingNodes = this.matchingNodes.slice(0,this.maxResults);
-                        this.showMessageBox("High Result Count Warning",
-                            (<div>
-                                <span>{"Your search returned a large number of matches and could impact performance"}</span>
-                                <br></br>
-                                <br></br>
-                                <span>{"By default only the first " + this.maxResults + " of a possible " + totResults + " will be displayed"}</span>
-                                <br></br>
-                                <br></br>
-                                <span>{"Do you want to see all the results ?"}</span>
-                                <br></br>
-                                <span>{"(This may take some time)"}</span>
-                            </div>),
-                            this.hideMessageBox,[new modalDialogButton("Show All",this.showAll),new modalDialogButton("Show Default",this.hideMessageBox)]
-                        );
+                        this.maxExceeded();
                         break;
 
                     case this.matchingNodes.length === 0:
@@ -723,7 +760,12 @@ export default class TreeView extends FlowComponent {
         }
         else {
             this.matchingNodes = undefined;
+            this.drawResults();
         }
+    }
+
+    drawResults() {
+        this.hideMessageBox();
         this.buildTree(this.nodeTree);
         this.expandToSelected();
         this.expandToFilter();
