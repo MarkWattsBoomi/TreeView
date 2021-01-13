@@ -1,10 +1,10 @@
 import React, { CSSProperties } from 'react';
 
-import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, MessageBox } from 'flow-component-model';
+import { modalDialogButton, eLoadingState, FlowComponent, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionBindingType, eContentType, FlowMessageBox } from 'flow-component-model';
 import '../css/treeview.css';
 import TreeViewNode from './TreeViewNode';
 import TreeViewItem from './TreeViewItem';
-import ContextMenu from '../ContextMenu/ContextMenu';
+import FlowContextMenu from 'flow-component-model/lib/Dialogs/FlowContextMenu';
 
 //declare const manywho: IManywho;
 declare const manywho: any;
@@ -29,7 +29,7 @@ export default class TreeView extends FlowComponent {
 
     draggedNode: number;
 
-    contextMenu: any;
+    contextMenu: FlowContextMenu;
 
     defaultExpanded: boolean = false;
     expansionPath: number[] = [];
@@ -43,8 +43,8 @@ export default class TreeView extends FlowComponent {
 
     maxResults: number = 30;
     absoluteMaxResults: number = 1000;
-   
-        
+
+    messageBox: FlowMessageBox;
 
     constructor(props: any) {
         super(props);
@@ -608,7 +608,7 @@ export default class TreeView extends FlowComponent {
     }
 
     showAll(e: any) {
-        this.hideMessageBox();
+        this.messageBox.hideMessageBox();
         this.filterTree(true);
     }
 
@@ -619,7 +619,7 @@ export default class TreeView extends FlowComponent {
     maxExceeded() {
         let tot: number = this.matchingNodes.length;
         this.matchingNodes = this.matchingNodes.slice(0,this.maxResults);
-        this.showMessageBox("High Result Count Warning",
+        this.messageBox.showMessageBox("High Result Count Warning",
             (<div>
                 <span>{"Your search returned a large number of matches and could impact performance"}</span>
                 <br></br>
@@ -631,14 +631,14 @@ export default class TreeView extends FlowComponent {
                 <br></br>
                 <span>{"(This may take some time)"}</span>
             </div>),
-            this.hideMessageBox,[new modalDialogButton("Show All",this.showAll),new modalDialogButton("Show Default",this.drawResults)]
+            [new modalDialogButton("Show All",this.showAll),new modalDialogButton("Show Default",this.drawResults)]
         );
     }
 
     absoluteMaxExceeded() {
         let tot: number = this.matchingNodes.length;
         this.matchingNodes = this.matchingNodes.slice(0,this.absoluteMaxResults);
-        this.showMessageBox("Extreme High Result Count Warning",
+        this.messageBox.showMessageBox("Extreme High Result Count Warning",
             (<div>
                 <span>{"Your search returned more than " + this.absoluteMaxResults + " matches and will impact performance"}</span>
                 <br></br>
@@ -647,7 +647,7 @@ export default class TreeView extends FlowComponent {
                 <br></br>
                 <br></br>
             </div>),
-            this.hideMessageBox,[new modalDialogButton("Ok",this.drawResults)]
+            [new modalDialogButton("Ok",this.drawResults)]
         );
     }
 
@@ -660,7 +660,7 @@ export default class TreeView extends FlowComponent {
                     <span>Searching with less than 3 characters is not permitted.</span>
                 );
                 this.matchingNodes = undefined;
-                this.showMessageBox("Search Criteria Restriction",content,this.hideMessageBox,[new modalDialogButton("Ok",this.hideMessageBox)]);
+                this.messageBox.showMessageBox("Search Criteria Restriction",content,[new modalDialogButton("Ok",this.messageBox.hideMessageBox)]);
             }
             else {
                 this.matchingNodes = [];
@@ -692,9 +692,9 @@ export default class TreeView extends FlowComponent {
                         break;
 
                     case this.matchingNodes.length === 0:
-                        this.showMessageBox("No Results",
+                        this.messageBox.showMessageBox("No Results",
                             (<span>{"The search returned no matches, please refine your search and try again."}</span>),
-                            this.hideMessageBox,[new modalDialogButton("Ok",this.hideMessageBox)]
+                            [new modalDialogButton("Ok",this.messageBox.hideMessageBox)]
                         );
                         break;
                     default:
@@ -710,7 +710,7 @@ export default class TreeView extends FlowComponent {
     }
 
     drawResults() {
-        this.hideMessageBox();
+        this.messageBox.hideMessageBox();
         this.buildTree(this.nodeTree);
         this.expandToSelected();
         this.expandToFilter();
@@ -750,13 +750,13 @@ export default class TreeView extends FlowComponent {
                     ));
                 }
             });
-            this.contextMenu.show(e.clientX, e.clientY,listItems);   
+            this.contextMenu.showContextMenu(e.clientX, e.clientY,listItems);   
             this.forceUpdate();
         }
     }
 
     async hideContextMenu() {
-        this.contextMenu.hide();
+        this.contextMenu.hideContextMenu();
     }
     
 
@@ -765,39 +765,8 @@ export default class TreeView extends FlowComponent {
         if(this.loadingState !== eLoadingState.ready) {
             return this.lastContent;
         }
-        let modal: any;
-        if (this.dialogVisible === true) {
-            modal = (
-                <ModalDialog
-                    title={this.dialogTitle}
-                    buttons={this.dialogButtons}
-                    onClose={this.dialogOnClose}
-                >
-                    {this.dialogContent}
-                </ModalDialog>
-            );
-        }
-
-        let msgbox: any;
-        if (this.msgboxVisible === true) {
-            msgbox = (
-                <MessageBox
-                    title={this.msgboxTitle}
-                    buttons={this.msgboxButtons}
-                    onClose={this.msgboxOnClose}
-                >
-                    {this.msgboxContent}
-                </MessageBox>
-            );
-        }
-
-        let contextMenu = (
-            <ContextMenu 
-                parent={this}
-                ref={(element: ContextMenu) => {this.contextMenu=element}}
-            />
-        );
-
+        
+        
         //construct tree REACT elements
         this.debug("render",eDebugLevel.error);
         
@@ -826,9 +795,14 @@ export default class TreeView extends FlowComponent {
                 style={style}
                 onContextMenu={this.showContextMenu}
             >
-                {contextMenu}
-                {modal}
-                {msgbox}
+                <FlowContextMenu
+                    parent={this}
+                    ref={(element: FlowContextMenu) => {this.contextMenu = element}}
+                />
+                <FlowMessageBox
+                    parent={this}
+                    ref={(element: FlowMessageBox) => {this.messageBox = element}}
+                />
                 <div
                     className="treeview-header"
                 >

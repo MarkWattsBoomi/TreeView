@@ -1,4 +1,4 @@
-import { eLoadingState, FlowComponent, MessageBox, modalDialogButton } from 'flow-component-model';
+import { eLoadingState, FlowComponent, FlowMessageBox, modalDialogButton } from 'flow-component-model';
 import React, { CSSProperties } from 'react';
 import { eDebugLevel } from '..';
 
@@ -15,6 +15,8 @@ export default class NavigationOverride extends FlowComponent {
     hiddenElements: any[] = [];
 
     unloading: boolean = false;
+
+    messageBox: FlowMessageBox;
 
     constructor(props: any) {
         super(props);
@@ -61,11 +63,10 @@ export default class NavigationOverride extends FlowComponent {
 
         console.log("click");
 
-        this.showMessageBox(
+        this.messageBox.showMessageBox(
             this.model.developerName,
             (<div dangerouslySetInnerHTML={{ __html: this.model.content }} />), 
-            this.hideMessageBox,
-            [new modalDialogButton("Ok",this.hideMessageBox)]
+            [new modalDialogButton("Ok",this.messageBox.hideMessageBox)]
         );
 
     }
@@ -91,19 +92,14 @@ export default class NavigationOverride extends FlowComponent {
 
    
     render() {
-        let msgbox: any;
-        if (this.msgboxVisible === true) {
-            msgbox = (
-                <MessageBox
-                    title={this.msgboxTitle}
-                    buttons={this.msgboxButtons}
-                    onClose={this.msgboxOnClose}
-                >
-                    {this.msgboxContent}
-                </MessageBox>
-            );
-        }
-    return (<div>{msgbox}</div>)
+        return (
+            <div>
+                <FlowMessageBox
+                    parent={this}
+                    ref={(element: FlowMessageBox) => {this.messageBox = element}}
+                />
+            </div>
+        )
     }
 
 

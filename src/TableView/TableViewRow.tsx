@@ -1,40 +1,19 @@
 import React, { CSSProperties } from "react";
 import { TableViewColumn, TableViewItem } from "./TableViewItem";
 import TableView from "./TableView";
-import { FlowDisplayColumn, FlowOutcome, MessageBox, modalDialogButton } from "flow-component-model";
+import { FlowDisplayColumn, FlowMessageBox, FlowOutcome, modalDialogButton } from "flow-component-model";
 
 export default class TableViewRow extends React.Component<any,any> {
     
-    msgboxVisible: boolean = false;
-    msgboxTitle: string = '';
-    msgboxButtons: any = [];
-    msgboxContent: any;
-    msgboxOnClose: any;
+    messageBox: FlowMessageBox;
 
     constructor(props: any) {
         super(props);
         this.valueChanged = this.valueChanged.bind(this);
-        this.showMessageBox = this.showMessageBox.bind(this);
-        this.hideMessageBox = this.hideMessageBox.bind(this);
+        
     }
 
-    async showMessageBox(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.msgboxVisible = true;
-        this.msgboxTitle = title;
-        this.msgboxContent = content;
-        this.msgboxOnClose = onClose;
-        this.msgboxButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideMessageBox() {
-        this.msgboxVisible = false;
-        this.msgboxTitle = '';
-        this.msgboxContent = undefined;
-        this.msgboxOnClose = undefined;
-        this.msgboxButtons = [];
-        return this.forceUpdate();
-    }
+    
 
     valueChanged(e: any, colName: string) {
         const root: TableView = this.props.root;
@@ -51,15 +30,14 @@ export default class TableViewRow extends React.Component<any,any> {
         const root: TableView = this.props.root;
         const row: TableViewItem = root.rowMap.get(this.props.rowId);
 
-        this.showMessageBox(
+        this.messageBox.showMessageBox(
             row.columns.get("ATTRIBUTE_NAME").value,
             (
                 <span>
                     {(row.columns.get(oldCol).value || "[Empty]") + " => " + (row.columns.get(newCol).value || "[Empty]")}
                 </span>
             ), 
-            this.hideMessageBox,
-            [new modalDialogButton("Ok",this.hideMessageBox)]
+            [new modalDialogButton("Ok",this.messageBox.hideMessageBox)]
         );
     }
 
@@ -177,26 +155,16 @@ export default class TableViewRow extends React.Component<any,any> {
             lastColDef = colDef;
         });
         
-        let msgbox: any;
-        if (this.msgboxVisible === true) {
-            msgbox = (
-                <MessageBox
-                    title={this.msgboxTitle}
-                    buttons={this.msgboxButtons}
-                    onClose={this.msgboxOnClose}
-                >
-                    {this.msgboxContent}
-                </MessageBox>
-            );
-        }
-
         return (
             <div
                 className={"table-view-row" + selectedClass}
                 onClick={(e: any) => {root.doOutcome("OnSelect",row.id)}}
                 style={style}
             >
-                {msgbox}
+                <FlowMessageBox
+                    parent={this}
+                    ref={(element: FlowMessageBox) => {this.messageBox = element}}
+                />
                 <div
                     className={"table-view-row-buttons" + selectedClass}
                 >

@@ -1,8 +1,7 @@
 import React, { CSSProperties } from 'react';
 
-import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField, MessageBox } from 'flow-component-model';
+import {  eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData,  FlowOutcome,  ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField } from 'flow-component-model';
 import '../css/DataGrid.css';
-import ContextMenu from '../ContextMenu/ContextMenu';
 import { eDebugLevel } from '..';
 import { DataGridColumn, DataGridItem } from './DataGridItem';
 import DataGridRow from './DataGridRow';
@@ -27,79 +26,23 @@ export default class DataGrid extends FlowComponent {
     colComponents: Map<string,DataGridHeader> = new Map();
     colElements: Array<DataGridHeader> = [];
 
-    dialogVisible: boolean = false;
-    dialogTitle: string = '';
-    dialogButtons: any = [];
-    dialogContent: any;
-    dialogOnClose: any;
-    dialogForm: any;
-
-    msgboxVisible: boolean = false;
-    msgboxTitle: string = '';
-    msgboxButtons: any = [];
-    msgboxContent: any;
-    msgboxOnClose: any;
-
-    contextMenu: any;
-
+    
     matchingRows:  Map<string,string> = new Map();
 
     lastContent: any = (<div></div>);
 
     searchBox: HTMLInputElement;
    
-    async showDialog(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.dialogVisible = true;
-        this.dialogTitle = title;
-        this.dialogContent = content;
-        this.dialogOnClose = onClose;
-        this.dialogButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideDialog() {
-        this.dialogVisible = false;
-        this.dialogTitle = '';
-        this.dialogContent = undefined;
-        this.dialogOnClose = undefined;
-        this.dialogButtons = [];
-        this.dialogForm = undefined;
-        return this.forceUpdate();
-    }
-
-    async showMessageBox(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.msgboxVisible = true;
-        this.msgboxTitle = title;
-        this.msgboxContent = content;
-        this.msgboxOnClose = onClose;
-        this.msgboxButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideMessageBox() {
-        this.msgboxVisible = false;
-        this.msgboxTitle = '';
-        this.msgboxContent = undefined;
-        this.msgboxOnClose = undefined;
-        this.msgboxButtons = [];
-        return this.forceUpdate();
-    }
-    
+        
 
     constructor(props: any) {
         super(props);
 
         this.handleMessage = this.handleMessage.bind(this);
-        this.showDialog = this.showDialog.bind(this);
-        this.hideDialog = this.hideDialog.bind(this);
-        this.showMessageBox = this.showMessageBox.bind(this);
-        this.hideMessageBox = this.hideMessageBox.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
         this.flowMoved = this.flowMoved.bind(this);
         this.doOutcome = this.doOutcome.bind(this);
-        this.setRow = this.setRow.bind(this);
-        this.showContextMenu = this.showContextMenu.bind(this);
-        this.hideContextMenu = this.hideContextMenu.bind(this);  
+        this.setRow = this.setRow.bind(this); 
         this.filterTable = this.filterTable.bind(this);
         this.filterTableClear = this.filterTableClear.bind(this);
         this.searchKeyEvent = this.searchKeyEvent.bind(this);
@@ -473,81 +416,12 @@ export default class DataGrid extends FlowComponent {
         this.filterTable();
     }
 
-    showContextMenu(e: any) {
-        e.preventDefault();
-        e.stopPropagation();
-        let listItems: Map<string , any> = new Map();
-        if(this.contextMenu) {
-            Object.keys(this.outcomes).forEach((key: string) => {
-                const outcome: FlowOutcome = this.outcomes[key];
-                if (outcome.isBulkAction === true && outcome.developerName !== "OnSelect" && outcome.developerName.toLowerCase().startsWith("cm")) {
-                    listItems.set(outcome.developerName,(
-                        <li 
-                            className="cm-item"
-                            title={outcome.label || key}
-                            onClick={(e: any) => {e.stopPropagation(); this.doOutcome(key, undefined)}}
-                        >
-                            <span
-                                className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " cm-item-icon"} />
-                            <span
-                                className={"cm-item-label"}
-                            >
-                                {outcome.label || key}
-                            </span>
-                        </li>
-                    ));
-                }
-            });
-            this.contextMenu.show(e.clientX, e.clientY,listItems);   
-            this.forceUpdate();
-        }
-    }
-
-    async hideContextMenu() {
-        this.contextMenu.hide();
-    }
-    
-
-    
-
     render() {
         
         if(this.loadingState !== eLoadingState.ready) {
             return this.lastContent;
         }
-        let modal: any;
-        if (this.dialogVisible === true) {
-            modal = (
-                <ModalDialog
-                    title={this.dialogTitle}
-                    buttons={this.dialogButtons}
-                    onClose={this.dialogOnClose}
-                >
-                    {this.dialogContent}
-                </ModalDialog>
-            );
-        }
-
-        let msgbox: any;
-        if (this.msgboxVisible === true) {
-            msgbox = (
-                <MessageBox
-                    title={this.msgboxTitle}
-                    buttons={this.msgboxButtons}
-                    onClose={this.msgboxOnClose}
-                >
-                    {this.msgboxContent}
-                </MessageBox>
-            );
-        }
-
-        let contextMenu = (
-            <ContextMenu 
-                parent={this}
-                ref={(element: ContextMenu) => {this.contextMenu=element}}
-            />
-        );
-
+        
         //construct table REACT elements
         this.colElements = this.buildTableHeaders();
         this.rowElements = this.buildTable();
@@ -574,11 +448,7 @@ export default class DataGrid extends FlowComponent {
             <div
                 className={classes}
                 style={style}
-                onContextMenu={this.showContextMenu}
             >
-                {contextMenu}
-                {modal}
-                {msgbox}
                 <div
                     className="data-grid-header"
                 >

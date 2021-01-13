@@ -1,41 +1,17 @@
 import React, { CSSProperties } from "react";
 
 import DataGrid from "./DataGrid";
-import { FlowDisplayColumn, FlowOutcome, MessageBox, modalDialogButton } from "flow-component-model";
+import { FlowDisplayColumn, FlowOutcome, modalDialogButton } from "flow-component-model";
 import { DataGridColumn, DataGridItem } from "./DataGridItem";
 
 export default class DataGridRow extends React.Component<any,any> {
     
-    msgboxVisible: boolean = false;
-    msgboxTitle: string = '';
-    msgboxButtons: any = [];
-    msgboxContent: any;
-    msgboxOnClose: any;
-
     constructor(props: any) {
         super(props);
         this.valueChanged = this.valueChanged.bind(this);
-        this.showMessageBox = this.showMessageBox.bind(this);
-        this.hideMessageBox = this.hideMessageBox.bind(this);
     }
 
-    async showMessageBox(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.msgboxVisible = true;
-        this.msgboxTitle = title;
-        this.msgboxContent = content;
-        this.msgboxOnClose = onClose;
-        this.msgboxButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideMessageBox() {
-        this.msgboxVisible = false;
-        this.msgboxTitle = '';
-        this.msgboxContent = undefined;
-        this.msgboxOnClose = undefined;
-        this.msgboxButtons = [];
-        return this.forceUpdate();
-    }
+   
 
     valueChanged(e: any, colName: string) {
         const root: DataGrid = this.props.root;
@@ -52,16 +28,6 @@ export default class DataGridRow extends React.Component<any,any> {
         const root: DataGrid = this.props.root;
         const row: DataGridItem = root.rowMap.get(this.props.rowId);
 
-        this.showMessageBox(
-            row.columns.get("ATTRIBUTE_NAME").value,
-            (
-                <span>
-                    {(row.columns.get(oldCol).value || "[Empty]") + " => " + (row.columns.get(newCol).value || "[Empty]")}
-                </span>
-            ), 
-            this.hideMessageBox,
-            [new modalDialogButton("Ok",this.hideMessageBox)]
-        );
     }
 
     render() {
@@ -187,26 +153,12 @@ export default class DataGridRow extends React.Component<any,any> {
             );
         }
         
-        let msgbox: any;
-        if (this.msgboxVisible === true) {
-            msgbox = (
-                <MessageBox
-                    title={this.msgboxTitle}
-                    buttons={this.msgboxButtons}
-                    onClose={this.msgboxOnClose}
-                >
-                    {this.msgboxContent}
-                </MessageBox>
-            );
-        }
-
         return (
             <tr
                 className={"data-grid-row" + selectedClass}
                 onClick={(e: any) => {root.doOutcome("OnSelect",row.id)}}
                 style={style}
             >
-                {msgbox}
                 {content}
             </tr>
         );

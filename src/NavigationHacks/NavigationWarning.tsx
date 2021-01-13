@@ -1,4 +1,4 @@
-import { eLoadingState, FlowComponent, MessageBox, modalDialogButton } from 'flow-component-model';
+import { eLoadingState, FlowComponent, FlowMessageBox, modalDialogButton } from 'flow-component-model';
 import React, { CSSProperties } from 'react';
 import { eDebugLevel } from '..';
 
@@ -17,6 +17,8 @@ export default class NavigationWarning extends FlowComponent {
 
     modifiedElements: any[] = [];
     unloading: boolean = false;
+
+    messageBox: FlowMessageBox;
 
     constructor(props: any) {
         super(props);
@@ -61,24 +63,23 @@ export default class NavigationWarning extends FlowComponent {
         ev.preventDefault();
         ev.stopPropagation();
         this.clickedMenuItem = ev.target;
-        this.showMessageBox(
+        this.messageBox.showMessageBox(
             this.model.label || this.model.developerName,
             (<div dangerouslySetInnerHTML={{ __html: this.model.content }} />), 
-            this.hideMessageBox,
             [new modalDialogButton(this.getAttribute("continueLabel","Continue"),this.continue),new modalDialogButton(this.getAttribute("cancelLabel","Cancel"),this.cancel)]
         );
 
     }
 
     continue() {
-        this.hideMessageBox();
+        this.messageBox.hideMessageBox();
         let nav = this.nav.get(this.clickedMenuItem.id);
         manywho.engine.navigate(this.navId,nav.id, nav.locationMapElementId, this.flowKey);
         this.clickedMenuItem = undefined;
     }
 
     cancel() {
-        this.hideMessageBox();
+        this.messageBox.hideMessageBox();
         this.clickedMenuItem = undefined;
     }
 
@@ -125,19 +126,12 @@ export default class NavigationWarning extends FlowComponent {
 
    
     render() {
-        let msgbox: any;
-        if (this.msgboxVisible === true) {
-            msgbox = (
-                <MessageBox
-                    title={this.msgboxTitle}
-                    buttons={this.msgboxButtons}
-                    onClose={this.msgboxOnClose}
-                >
-                    {this.msgboxContent}
-                </MessageBox>
-            );
-        }
-    return (<div>{msgbox}</div>)
+        return (
+            <FlowMessageBox
+                parent={this}
+                ref={(element: FlowMessageBox) => {this.messageBox = element}}
+            />
+        )
     }
 
 

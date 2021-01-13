@@ -1,15 +1,10 @@
 import React, { CSSProperties } from "react";
 import { SelectViewColumn, SelectViewItem } from "./SelectViewItem";
 import SelectView from "./SelectView";
-import { FlowDisplayColumn, FlowOutcome, MessageBox, modalDialogButton } from "flow-component-model";
+import { FlowDisplayColumn, FlowOutcome} from "flow-component-model";
 
 export default class SelectViewRow extends React.Component<any,any> {
     
-    //msgboxVisible: boolean = false;
-    //msgboxTitle: string = '';
-    //msgboxButtons: any = [];
-    //msgboxContent: any;
-    //msgboxOnClose: any;
 
     constructor(props: any) {
         super(props);
@@ -17,26 +12,6 @@ export default class SelectViewRow extends React.Component<any,any> {
         //this.hideMessageBox = this.hideMessageBox.bind(this);
         this.selected = this.selected.bind(this);
     }
-
-    /*
-    async showMessageBox(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.msgboxVisible = true;
-        this.msgboxTitle = title;
-        this.msgboxContent = content;
-        this.msgboxOnClose = onClose;
-        this.msgboxButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideMessageBox() {
-        this.msgboxVisible = false;
-        this.msgboxTitle = '';
-        this.msgboxContent = undefined;
-        this.msgboxOnClose = undefined;
-        this.msgboxButtons = [];
-        return this.forceUpdate();
-    }
-    */
 
     selected(e: any) {
         e.stopPropagation();
@@ -141,57 +116,14 @@ export default class SelectViewRow extends React.Component<any,any> {
             );
         }
         
-        let msgbox: any;
-        if (root.msgboxVisible === true) {
-            msgbox = (
-                <MessageBox
-                    title={root.msgboxTitle}
-                    buttons={root.msgboxButtons}
-                    onClose={root.msgboxOnClose}
-                >
-                    {root.msgboxContent}
-                </MessageBox>
-            );
-        }
-
         return (
             <tr
                 className={"select-view-table-row" + selectedClass}
                 onClick={this.selected}
                 style={style}
             >
-                {msgbox}
                 {content}
-                
             </tr>
-
-
         );
-
-        /*
-        <div
-                className={"select-view-row" + selectedClass}
-                onClick={(e: any) => {root.doOutcome("OnSelect",row.id)}}
-                style={style}
-            >
-                {msgbox}
-                <div
-                    className={"select-view-row-buttons" + selectedClass}
-                >
-                    {buttonsLeft}
-                </div>
-                <div
-                    className={"select-view-row-columns" + selectedClass}
-                    onClick={(e: any) => {root.doOutcome("OnSelect",row.id)}}
-                >
-                    {content}
-                </div>
-                <div
-                    className={"select-view-row-buttons" + selectedClass}
-                >
-                    {buttonsRight}
-                </div>
-            </div>
-            */
     }
 }

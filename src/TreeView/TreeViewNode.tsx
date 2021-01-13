@@ -1,6 +1,6 @@
-import { FlowOutcome, MessageBox, ModalDialog, modalDialogButton } from 'flow-component-model';
+import { FlowDialogBox, FlowMessageBox, FlowOutcome,  modalDialogButton } from 'flow-component-model';
+import FlowContextMenu from 'flow-component-model/lib/Dialogs/FlowContextMenu';
 import React, { CSSProperties } from 'react';
-import ContextMenu from '../ContextMenu/ContextMenu';
 import ItemInfo from '../Dialogs/ItemInfo';
 import TreeView, { eDebugLevel } from './TreeView';
 import TreeViewItem from './TreeViewItem';
@@ -8,20 +8,8 @@ import TreeViewItem from './TreeViewItem';
 export default class TreeViewNode extends React.Component<any, any> {
     context: any;
     canvas: any;
-    contextMenu: any;
-
-    msgboxVisible: boolean = false;
-    msgboxTitle: string = '';
-    msgboxButtons: any = [];
-    msgboxContent: any;
-    msgboxOnClose: any;
-
-    dialogVisible: boolean = false;
-    dialogTitle: string = '';
-    dialogButtons: any = [];
-    dialogContent: any;
-    dialogOnClose: any;
-    dialogForm: any;
+    contextMenu: FlowContextMenu;
+    messageBox: FlowMessageBox;
 
     expanded: boolean = false;
     
@@ -29,10 +17,6 @@ export default class TreeViewNode extends React.Component<any, any> {
         super(props);
         this.showContextMenu = this.showContextMenu.bind(this);
         this.hideContextMenu = this.hideContextMenu.bind(this);   
-        this.showMessageBox = this.showMessageBox.bind(this);
-        this.hideMessageBox = this.hideMessageBox.bind(this);
-        this.showDialog = this.showDialog.bind(this);
-        this.hideDialog = this.hideDialog.bind(this);
         this.showInfo = this.showInfo.bind(this);
         this.onSelect = this.onSelect.bind(this);
         this.expanded = this.props.expanded || false;
@@ -51,43 +35,7 @@ export default class TreeViewNode extends React.Component<any, any> {
         }
     }
     
-    async showMessageBox(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.msgboxVisible = true;
-        this.msgboxTitle = title;
-        this.msgboxContent = content;
-        this.msgboxOnClose = onClose;
-        this.msgboxButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideMessageBox() {
-        this.msgboxVisible = false;
-        this.msgboxTitle = '';
-        this.msgboxContent = undefined;
-        this.msgboxOnClose = undefined;
-        this.msgboxButtons = [];
-        return this.forceUpdate();
-    }
-
-    async showDialog(title: string, content: any, onClose: any, buttons: modalDialogButton[]) {
-        this.dialogVisible = true;
-        this.dialogTitle = title;
-        this.dialogContent = content;
-        this.dialogOnClose = onClose;
-        this.dialogButtons = buttons;
-        return this.forceUpdate();
-    }
-
-    async hideDialog() {
-        this.dialogVisible = false;
-        this.dialogTitle = '';
-        this.dialogContent = undefined;
-        this.dialogOnClose = undefined;
-        this.dialogButtons = [];
-        this.dialogForm = undefined;
-        return this.forceUpdate();
-    }
-
+    
     showContextMenu(e: any) {
         e.preventDefault();
         e.stopPropagation();
@@ -124,13 +72,13 @@ export default class TreeViewNode extends React.Component<any, any> {
                     }
                 }
             });
-            this.contextMenu.show(e.clientX, e.clientY,listItems);   
+            this.contextMenu.showContextMenu(e.clientX, e.clientY,listItems);   
             this.forceUpdate();
         }
     }
 
     async hideContextMenu() {
-        this.contextMenu.hide();
+        this.contextMenu.hideContextMenu();
     }
 
     showInfo() {
@@ -142,7 +90,7 @@ export default class TreeViewNode extends React.Component<any, any> {
                 display={root.model.displayColumns}
             />
         );
-        this.showDialog(node.itemName,content,this.hideDialog,[new modalDialogButton("Close",this.hideDialog)])
+        this.messageBox.showMessageBox(node.itemName,content,[new modalDialogButton("Close",this.messageBox.hideMessageBox)])
     }
 
     onSelect(e: any) {
@@ -208,40 +156,7 @@ export default class TreeViewNode extends React.Component<any, any> {
                     }
                 }
             });
-        }
-
-        let contextMenu = (
-            <ContextMenu 
-                parent={this}
-                ref={(element: ContextMenu) => {this.contextMenu=element}}
-            />
-        );
-
-        let modal: any;
-        if (this.dialogVisible === true) {
-            modal = (
-                <ModalDialog
-                    title={this.dialogTitle}
-                    buttons={this.dialogButtons}
-                    onClose={this.dialogOnClose}
-                >
-                    {this.dialogContent}
-                </ModalDialog>
-            );
-        }
-
-        let msgbox: any;
-        if (this.msgboxVisible === true) {
-            msgbox = (
-                <MessageBox
-                    title={this.msgboxTitle}
-                    buttons={this.msgboxButtons}
-                    onClose={this.msgboxOnClose}
-                >
-                    {this.msgboxContent}
-                </MessageBox>
-            );
-        }
+        }    
 
         let label: string = node.itemName;
         if(root.debugLevel >= eDebugLevel.info) {
@@ -307,9 +222,14 @@ export default class TreeViewNode extends React.Component<any, any> {
                         data-node={node.itemId}
                         onContextMenu={this.showContextMenu}
                     >
-                        {modal}
-                        {msgbox}
-                        {contextMenu}
+                        <FlowMessageBox
+                            parent={this}
+                            ref={(element: FlowMessageBox) => {this.messageBox = element}}
+                        />
+                        <FlowContextMenu
+                            parent={this}
+                            ref={(element: FlowContextMenu) => {this.contextMenu = element}}
+                        />
                         <div
                             className="treeview-node-icons"
                         >

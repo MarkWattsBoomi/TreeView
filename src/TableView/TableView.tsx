@@ -1,12 +1,12 @@
 import React, { CSSProperties } from 'react';
 
-import { modalDialogButton, ModalDialog, eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowObjectDataProperty, FlowOutcome, ePageActionType, ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField, MessageBox } from 'flow-component-model';
+import { eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowOutcome, ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField } from 'flow-component-model';
 import '../css/TableView.css';
-import ContextMenu from '../ContextMenu/ContextMenu';
 import { eDebugLevel } from '..';
 import TableViewRow from './TableViewRow';
 import {TableViewItem, TableViewColumn } from './TableViewItem';
 import TableViewHeader from './TableViewColumn';
+import FlowContextMenu from 'flow-component-model/lib/Dialogs/FlowContextMenu';
 
 //declare const manywho: IManywho;
 declare const manywho: any;
@@ -26,7 +26,7 @@ export default class TableView extends FlowComponent {
     colComponents: Map<string,TableViewHeader> = new Map();
     colElements: Array<TableViewHeader> = [];
 
-    contextMenu: any;
+    contextMenu: FlowContextMenu;
 
     matchingRows:  Map<string,string> = new Map();
 
@@ -425,13 +425,13 @@ export default class TableView extends FlowComponent {
                     ));
                 }
             });
-            this.contextMenu.show(e.clientX, e.clientY,listItems);   
+            this.contextMenu.showContextMenu(e.clientX, e.clientY,listItems);   
             this.forceUpdate();
         }
     }
 
     async hideContextMenu() {
-        this.contextMenu.hide();
+        this.contextMenu.hideContextMenu();
     }
     
 
@@ -442,39 +442,7 @@ export default class TableView extends FlowComponent {
         if(this.loadingState !== eLoadingState.ready) {
             return this.lastContent;
         }
-        let modal: any;
-        if (this.dialogVisible === true) {
-            modal = (
-                <ModalDialog
-                    title={this.dialogTitle}
-                    buttons={this.dialogButtons}
-                    onClose={this.dialogOnClose}
-                >
-                    {this.dialogContent}
-                </ModalDialog>
-            );
-        }
-
-        let msgbox: any;
-        if (this.msgboxVisible === true) {
-            msgbox = (
-                <MessageBox
-                    title={this.msgboxTitle}
-                    buttons={this.msgboxButtons}
-                    onClose={this.msgboxOnClose}
-                >
-                    {this.msgboxContent}
-                </MessageBox>
-            );
-        }
-
-        let contextMenu = (
-            <ContextMenu 
-                parent={this}
-                ref={(element: ContextMenu) => {this.contextMenu=element}}
-            />
-        );
-
+        
         //construct table REACT elements
         this.colElements = this.buildTableHeaders();
         this.rowElements = this.buildTable();
@@ -503,9 +471,10 @@ export default class TableView extends FlowComponent {
                 style={style}
                 onContextMenu={this.showContextMenu}
             >
-                {contextMenu}
-                {modal}
-                {msgbox}
+                <FlowContextMenu
+                    parent={this}
+                    ref={(element: FlowContextMenu) => {this.contextMenu = element}}
+                />
                 <div
                     className="treeview-header"
                 >

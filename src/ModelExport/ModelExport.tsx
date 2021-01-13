@@ -1,4 +1,4 @@
-import {eContentType, eLoadingState, FlowComponent, FlowDisplayColumn, FlowObjectData, FlowObjectDataArray, FlowObjectDataProperty, ModalDialog, modalDialogButton} from 'flow-component-model';
+import {eContentType, FlowComponent, FlowDisplayColumn, FlowObjectData, FlowObjectDataArray} from 'flow-component-model';
 import * as React from 'react';
 
 declare const manywho: any;
