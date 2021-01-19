@@ -172,7 +172,7 @@ export default class TableView extends FlowComponent {
                     //if multi select then we are working on a selected subset
                     if(this.model.multiSelect === true) {
                         //we only store subset
-                        await this.pushSelectedToState();
+                        await this.pushModifiedToState();
                     }
                     else {
                         // we store entire model to state
