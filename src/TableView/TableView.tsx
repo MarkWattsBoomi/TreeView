@@ -171,7 +171,7 @@ export default class TableView extends FlowComponent {
                     }
                     //if multi select then we are working on a selected subset
                     if(this.model.multiSelect === true) {
-                        //we only store subset
+                        //we only store the modified rows subset
                         await this.pushModifiedToState();
                     }
                     else {
@@ -202,6 +202,7 @@ export default class TableView extends FlowComponent {
         this.forceUpdate();
     }
 
+    // triggered when a child row tells us it's value was modified
     async rowValueChanged(rowId: string, colName: string, oldVal: string, newVal: any) {
         console.log(rowId + "," + colName +" = " + oldVal + "=>" +  newVal);
 
@@ -210,6 +211,7 @@ export default class TableView extends FlowComponent {
         await this.doOutcome("OnChange",rowId);
     }
 
+    // this will push the entire model datasource to the state and flag any modified ones as selected
     async pushModelToState() {
         let updateData: FlowObjectDataArray = new FlowObjectDataArray();
         this.rowMap.forEach((item: TableViewItem) => {
@@ -224,6 +226,7 @@ export default class TableView extends FlowComponent {
         await this.setStateValue(updateData);
     }
 
+    // this will only push the modified rows to the state
     async pushModifiedToState() {
         let updateData: FlowObjectDataArray = new FlowObjectDataArray();
         this.rowMap.forEach((item: TableViewItem) => {
@@ -235,6 +238,7 @@ export default class TableView extends FlowComponent {
         await this.setStateValue(updateData);
     }
 
+    // this only pushes the single selected item to the state - this is the last clicked or modified row
     async pushSelectedToState() {
         let updateData: FlowObjectDataArray = new FlowObjectDataArray();
         this.rowMap.forEach((item: TableViewItem) => {
