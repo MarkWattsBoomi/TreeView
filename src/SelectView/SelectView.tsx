@@ -1,6 +1,6 @@
 import React, { CSSProperties } from 'react';
 
-import { eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowOutcome, FlowDisplayColumn, FlowField, FlowMessageBox, FlowDialogBox } from 'flow-component-model';
+import { eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowOutcome, FlowDisplayColumn, FlowField, FlowMessageBox, FlowDialogBox, modalDialogButton } from 'flow-component-model';
 import '../css/SelectView.css';
 import { eDebugLevel } from '..';
 import SelectViewRow from './SelectViewRow';
@@ -40,7 +40,6 @@ export default class SelectView extends FlowComponent {
     constructor(props: any) {
         super(props);
 
-        this.handleMessage = this.handleMessage.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
         this.flowMoved = this.flowMoved.bind(this);
         this.doOutcome = this.doOutcome.bind(this);
@@ -390,6 +389,20 @@ export default class SelectView extends FlowComponent {
                     }
                 });
             });
+        }
+        switch(true) {
+
+            // over abs max.  truncate and warn
+            case this.matchingRows.size === 0:
+                this.messageBox.showMessageBox("No Results",
+                    (<span>{"The search returned no matches, please refine your search and try again."}</span>),
+                    [new modalDialogButton("Ok",this.messageBox.hideMessageBox)]
+                );
+                this.searchBox.value = "";
+                break;
+            default:
+                //do nothing
+                break;
         }
         this.forceUpdate();
     }

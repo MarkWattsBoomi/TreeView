@@ -1,6 +1,6 @@
 import React, { CSSProperties } from 'react';
 
-import { eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowOutcome, ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField } from 'flow-component-model';
+import { eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowOutcome, ePageActionBindingType, eContentType, FlowDisplayColumn, FlowField, FlowMessageBox, modalDialogButton } from 'flow-component-model';
 import '../css/TableView.css';
 import { eDebugLevel } from '..';
 import TableViewRow from './TableViewRow';
@@ -27,6 +27,7 @@ export default class TableView extends FlowComponent {
     colElements: Array<TableViewHeader> = [];
 
     contextMenu: FlowContextMenu;
+    messageBox: FlowMessageBox;
 
     matchingRows:  Map<string,string> = new Map();
 
@@ -396,6 +397,20 @@ export default class TableView extends FlowComponent {
                 });
             });
         }
+        switch(true) {
+
+            // over abs max.  truncate and warn
+            case this.matchingRows.size === 0:
+                this.messageBox.showMessageBox("No Results",
+                    (<span>{"The search returned no matches, please refine your search and try again."}</span>),
+                    [new modalDialogButton("Ok",this.messageBox.hideMessageBox)]
+                );
+                this.searchBox.value = "";
+                break;
+            default:
+                //do nothing
+                break;
+        }
         this.forceUpdate();
     }
 
@@ -475,6 +490,10 @@ export default class TableView extends FlowComponent {
                 style={style}
                 onContextMenu={this.showContextMenu}
             >
+                <FlowMessageBox
+                    parent={this}
+                    ref={(element: FlowMessageBox) => {this.messageBox = element}}
+                />
                 <FlowContextMenu
                     parent={this}
                     ref={(element: FlowContextMenu) => {this.contextMenu = element}}

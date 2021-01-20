@@ -696,9 +696,10 @@ export default class TreeView extends FlowComponent {
                             (<span>{"The search returned no matches, please refine your search and try again."}</span>),
                             [new modalDialogButton("Ok",this.messageBox.hideMessageBox)]
                         );
+                        this.searchBox.value = "";
                         break;
                     default:
-                        //do nothing
+                        this.drawResults();
                         break;
                 }
             }
