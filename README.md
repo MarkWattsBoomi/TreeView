@@ -136,6 +136,10 @@ Setting this attribute to "true" will show the tree initially fully expanded.  D
 
 If present and set to "true" then only the lowest level tree nodes will show buttons or context menu items for this outcome
 
+### ClickedState
+
+If present and set to the value name of an object of the same type as the model then this will be set to the value of the clicked item regardless of the edabled state, this complements the state value which can only be set to an enabled item.
+
 
 ## Styling
 
