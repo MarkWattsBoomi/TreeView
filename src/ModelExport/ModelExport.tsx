@@ -1,4 +1,4 @@
-import {eContentType, FlowComponent, FlowDisplayColumn, FlowObjectData, FlowObjectDataArray} from 'flow-component-model';
+import {eContentType, FlowComponent, FlowDisplayColumn, FlowObjectData, FlowObjectDataArray, FlowObjectDataProperty} from 'flow-component-model';
 import * as React from 'react';
 
 declare const manywho: any;
@@ -51,21 +51,104 @@ export default class ModelExport extends FlowComponent {
         let body: string = '';
         let headers: string = '';
         let row: string = '';
-        const cols: Map<string,FlowDisplayColumn> = new Map();
-        this.model.displayColumns.forEach((col: FlowDisplayColumn) => {
-            cols.set(col.developerName, col);
-        });
 
+
+        // this will hold an array of all found child attribute names.
+        // it will ultimately be used to order / construct the output
+        const columns: Array<string> = [];
+
+        // an array of maps.  each array item is an object data and its map of cols / attributes keyed on name
+        const values: Array<Map<string,any>> = [];
+        
+        //loop over the datasource adding it's props to the vals map
         this.model.dataSource.items.forEach((item: FlowObjectData) => {
+            //create new map for this item
+            let value: Map<string,any> = new Map();
             
-            if(headers.length === 0){
-                headers = this.buildHeaders(cols,item);
+            // loop over props adding each one
+            Object.keys(item.properties).forEach((key: string) => {
+                let prop: FlowObjectDataProperty = item.properties[key];
+                
+                switch(prop.contentType){
+                    case eContentType.ContentList:
+                        let subvals: Map<string,string> = new Map();
+                        let children: FlowObjectDataArray = prop.value as FlowObjectDataArray;
+                        children.items.forEach((item: FlowObjectData) => {
+                            subvals.set(item.properties["ATTRIBUTE_DISPLAY_NAME"].value as string , item.properties["ATTRIBUTE_VALUE"].value as string);
+                            if(columns.indexOf(item.properties["ATTRIBUTE_DISPLAY_NAME"].value as string) < 0) {
+                               columns.push(item.properties["ATTRIBUTE_DISPLAY_NAME"].value as string);
+                            }
+                        });
+                        value.set(prop.developerName, subvals);
+                        break;
+    
+                    default:
+                        value.set(prop.developerName, prop.value);
+                        break;
+                }
+            })
+
+            // add this item to the array
+            values.push(value);
+        });
+        
+
+        // build headers
+        this.model.displayColumns.forEach((col: FlowDisplayColumn) => {
+            if(headers.length > 0) {
+                headers += ","
             }
-            row = this.buildRow(cols,item)
+            if(col.contentType === eContentType.ContentList) {
+                let subHeaders: string = "";
+                columns.forEach((key: string) => {
+                    if(subHeaders.length > 0) {
+                        subHeaders += ","
+                    }
+                    subHeaders += "'" + key + "'";
+                });  
+                headers += subHeaders;              
+            }
+            else {
+                headers += "'" + col.label + "'";
+            }
+        });
+        //now loop over the values referincing the display cols to build the row
+        
+        values.forEach((value: Map<string, any>) => {
+            row="";
+            this.model.displayColumns.forEach((col: FlowDisplayColumn) => {
+                if(row.length > 0) {
+                    row += ","
+                }
+                if(value.has(col.developerName)) {
+                    if(col.contentType === eContentType.ContentList) {
+                        let subRow: string = "";
+                        let children: Map<string,string> = value.get(col.developerName);
+                        columns.forEach((key: string) => {
+                            if(subRow.length > 0) {
+                                subRow += ","
+                            }
+                            subRow += "'" + (children.has(key) ? children.get(key) : "") + "'";
+                        });
+                        row += subRow;
+                    }
+                    else {
+                        row += "'" + (value.has(col.developerName) ? value.get(col.developerName) : "") + "'";
+                        
+                    }
+                    
+                }
+                else {
+                    row += "''";
+                }
+            });
+            row += '\r\n';
             body += row;
         });
-
-        file = headers + body;
+        
+        
+        
+        file = headers + '\r\n' + body;
 
         const blob = new Blob([file], { type: 'text/csv' });
         if (navigator.msSaveBlob) { // IE 10+
