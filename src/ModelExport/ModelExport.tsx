@@ -94,6 +94,7 @@ export default class ModelExport extends FlowComponent {
         
 
         // build headers
+        let collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
         this.model.displayColumns.forEach((col: FlowDisplayColumn) => {
             if(headers.length > 0) {
                 headers += ","
@@ -104,12 +105,12 @@ export default class ModelExport extends FlowComponent {
                     if(subHeaders.length > 0) {
                         subHeaders += ","
                     }
-                    subHeaders += "'" + key + "'";
+                    subHeaders += "\"" + key + "\"";
                 });  
                 headers += subHeaders;              
             }
             else {
-                headers += "'" + col.label + "'";
+                headers += "\"" + col.label + "\"";
             }
         });
         //now loop over the values referincing the display cols to build the row
@@ -128,18 +129,18 @@ export default class ModelExport extends FlowComponent {
                             if(subRow.length > 0) {
                                 subRow += ","
                             }
-                            subRow += "'" + (children.has(key) ? children.get(key) : "") + "'";
+                            subRow += "\"" + (children.has(key) ? children.get(key) : "") + "\"";
                         });
                         row += subRow;
                     }
                     else {
-                        row += "'" + (value.has(col.developerName) ? value.get(col.developerName) : "") + "'";
+                        row += "\"" + (value.has(col.developerName) ? value.get(col.developerName) : "") + "\"";
                         
                     }
                     
                 }
                 else {
-                    row += "''";
+                    row += "\"\"";
                 }
             });
             row += '\r\n';
