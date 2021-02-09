@@ -55,7 +55,7 @@ export default class ModelExport extends FlowComponent {
 
         // this will hold an array of all found child attribute names.
         // it will ultimately be used to order / construct the output
-        const columns: Array<string> = [];
+        let columns: Array<string> = [];
 
         // an array of maps.  each array item is an object data and its map of cols / attributes keyed on name
         const values: Array<Map<string,any>> = [];
@@ -91,11 +91,18 @@ export default class ModelExport extends FlowComponent {
             // add this item to the array
             values.push(value);
         });
+
+        //now sort sub columns
+        let collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+        columns = columns.sort((a: any,b: any) => collator.compare(a,b));
+
+        //now sort columns
+        let dcolumns: Array<FlowDisplayColumn> = this.model.displayColumns.sort((a: any,b: any) => collator.compare(a.displayOrder,b.displayOrder));
         
 
         // build headers
-        let collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
-        this.model.displayColumns.forEach((col: FlowDisplayColumn) => {
+        
+        dcolumns.forEach((col: FlowDisplayColumn) => {
             if(headers.length > 0) {
                 headers += ","
             }
@@ -117,7 +124,7 @@ export default class ModelExport extends FlowComponent {
         
         values.forEach((value: Map<string, any>) => {
             row="";
-            this.model.displayColumns.forEach((col: FlowDisplayColumn) => {
+            dcolumns.forEach((col: FlowDisplayColumn) => {
                 if(row.length > 0) {
                     row += ","
                 }
