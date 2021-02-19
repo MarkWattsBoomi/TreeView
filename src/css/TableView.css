@@ -121,3 +121,26 @@
     margin-right: 10px;
     top: -1px !important;
 }
+
+.table-view-header-button {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-right: 1rem;
+    color: #fefefe;
+}
+
+.table-view-header-button:hover {
+    color: #ff7c66;
+    cursor: pointer;
+}
+
+.table-view-header-button-icon {
+    font-size: 18px;
+    margin-right: 0.5rem;
+    top: 0px !important;
+}
+
+.table-view-header-button-label {
+    font-size: 1rem;
+}

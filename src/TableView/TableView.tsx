@@ -262,12 +262,21 @@ export default class TableView extends FlowComponent {
             
             if (outcome.isBulkAction && outcome.developerName !== "OnSelect" && outcome.developerName !== "OnChange" && !outcome.developerName.toLowerCase().startsWith("cm")) {
                 content.push(
-                    <span 
+                    <div
+                        className={"table-view-header-button"}
                         key={key}
-                        className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " treeview-header-button"} 
                         title={outcome.label || key}
                         onClick={(e: any) => {this.doOutcome(key, undefined)}}
-                    />
+                    >
+                        <span 
+                            className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " table-view-header-button-icon"} 
+                        />
+                        <span 
+                            className={"table-view-header-button-label"} 
+                        >
+                            {outcome.label || key}
+                        </span>
+                    </div>
                 );
             }
         });
