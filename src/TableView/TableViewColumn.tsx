@@ -10,10 +10,10 @@ export default class TableViewHeader extends React.Component<any,any> {
 
         return (
             <div
-                className="table-view-header"
+                className={"table-view-header table-view-header-" + col.developerName}
             >
                 <span
-                    className="table-view-header-label"
+                    className={"table-view-header-label"}
                 >
                     {col.label}
                 </span>

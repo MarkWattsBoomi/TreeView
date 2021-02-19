@@ -121,7 +121,7 @@ export default class TableViewRow extends React.Component<any,any> {
 
                 content.push(
                     <div
-                        className="table-view-column"
+                        className={"table-view-column table-view-column-" + col.name} 
                     >
                         {cell}
                     </div>
