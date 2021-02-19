@@ -391,16 +391,24 @@ export default class TableView extends FlowComponent {
             //traverse all nodes
             this.rowMap.forEach((item: TableViewItem) => {
                 item.columns.forEach((col: TableViewColumn) => {
-                    if(col.value?.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 && this.matchingRows.size < 50) {
-                        this.matchingRows.set(item.id,item.id);
+                    if(col.type === 1) {
+                        if(col.value?.toLowerCase().indexOf(criteria.toLowerCase()) >= 0 && this.matchingRows.size < 50) {
+                            this.matchingRows.set(item.id,item.id);
+                        }
                     }
+                    else {
+                        if(col.value?.toString().toLowerCase().indexOf(criteria.toLowerCase()) >= 0 && this.matchingRows.size < 50) {
+                            this.matchingRows.set(item.id,item.id);
+                        }
+                    }
+                    
                 });
             });
         }
         switch(true) {
 
             // over abs max.  truncate and warn
-            case this.matchingRows.size === 0:
+            case this.matchingRows.size === 0 && criteria?.length > 0:
                 this.messageBox.showMessageBox("No Results",
                     (<span>{"The search returned no matches, please refine your search and try again."}</span>),
                     [new modalDialogButton("Ok",this.messageBox.hideMessageBox)]
