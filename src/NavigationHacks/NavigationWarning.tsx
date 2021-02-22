@@ -117,7 +117,7 @@ export default class NavigationWarning extends FlowComponent {
             for(let pos = 0 ; pos < elements.length ; pos ++) {
                 if(menuItems.indexOf(elements.item(pos).textContent.toLowerCase()) >= 0) {
                     this.modifiedElements.push(elements.item(pos) as HTMLElement);
-                    (elements.item(pos) as HTMLElement).onclick = this.click;
+                    (elements.item(pos) as HTMLElement).addEventListener('click',this.click);;
                 }
             }  
         }

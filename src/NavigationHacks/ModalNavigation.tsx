@@ -11,14 +11,23 @@ export default class ModalNavigation extends FlowComponent {
     context: any;
     debugLevel: eDebugLevel = eDebugLevel.error;
 
-    dummy: string="";
-
     messageBox: FlowMessageBox;
 
+   
+
     constructor(props: any) {
+        
         super(props);
         this.flowMoved = this.flowMoved.bind(this);
         this.click = this.click.bind(this);
+        this.butcherNavbar = this.butcherNavbar.bind(this);
+        this.setMessageBox = this.setMessageBox.bind(this);
+        console.log("init" + this.componentId);
+        this.state={flag: 0};
+    }
+
+    async setMessageBox(key: string, element: FlowMessageBox) {
+        this.messageBox = element;
     }
     
     async flowMoved(xhr: any, request: any) {
@@ -37,7 +46,6 @@ export default class ModalNavigation extends FlowComponent {
     async componentDidMount() {
         //will get this from a component attribute
         await super.componentDidMount();
-        
         (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
         this.butcherNavbar();
     }
@@ -47,15 +55,22 @@ export default class ModalNavigation extends FlowComponent {
         (manywho as any).eventManager.removeDoneListener(this.componentId);
     }
 
-    async click(ev: any) {
+    click(ev: any) {
         //ev.preventDefault();
         ev.stopPropagation();
-
-        await this.messageBox.showMessageBox(
-            this.model.developerName,
-            (<div dangerouslySetInnerHTML={{ __html: this.model.content }} />), 
-            [new modalDialogButton("Ok",this.messageBox.hideMessageBox)]
-        );
+        if(!this.messageBox) {
+            let newval = new Date().getTime()
+            this.setState({flag: newval},() => {
+                this.forceUpdate();
+            });
+        }
+        else {
+            this.messageBox?.showMessageBox(
+                this.model.developerName,
+                (<div dangerouslySetInnerHTML={{ __html: this.model.content }} />), 
+                [new modalDialogButton("Ok",this.messageBox.hideMessageBox)]
+            );
+        }
     }
 
     butcherNavbar() {
@@ -67,12 +82,11 @@ export default class ModalNavigation extends FlowComponent {
             for(let pos = 0 ; pos < elements.length ; pos ++) {
                 if(elements.item(pos).textContent === this.model.developerName){
                     let element: HTMLAnchorElement = elements.item(pos) as HTMLAnchorElement;
-                    element.onclick=this.click;
+                    element.addEventListener('click',this.click);
                 }
             }
-            
-            
         }
+        this.forceUpdate();
     }
 
    
@@ -81,7 +95,7 @@ export default class ModalNavigation extends FlowComponent {
             <div>
                 <FlowMessageBox
                     parent={this}
-                    ref={(element: FlowMessageBox) => {this.messageBox = element}}
+                    ref={(element: FlowMessageBox) => {this.setMessageBox(this.componentId, element)}}
                 />
             </div>
         )

@@ -61,8 +61,6 @@ export default class NavigationOverride extends FlowComponent {
         ev.preventDefault();
         ev.stopPropagation();
 
-        console.log("click");
-
         this.messageBox.showMessageBox(
             this.model.developerName,
             (<div dangerouslySetInnerHTML={{ __html: this.model.content }} />), 

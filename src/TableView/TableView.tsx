@@ -357,6 +357,8 @@ export default class TableView extends FlowComponent {
     //////////////////////////////////////////////////////////////
     buildTableHeaders() : Array<any>{
         const elements: Array<any> = [];
+        elements.push(<div className="table-view-row-buttons" />);
+
         if(this.colMap) {
             this.colMap.forEach((col: FlowDisplayColumn) => {
                 if(col.visible === true){
@@ -371,7 +373,7 @@ export default class TableView extends FlowComponent {
                 }
             });
         }
-        
+        elements.push(<div className="table-view-row-buttons" />);
         return elements;
     }
 
