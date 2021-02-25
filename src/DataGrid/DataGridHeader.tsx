@@ -10,10 +10,10 @@ export default class DataGridHeader extends React.Component<any,any> {
 
         return (
             <th
-                className="data-grid-header"
+                className={"data-grid-table-header data-grid-table-header-" + col.developerName}
             >
                 <span
-                    className="data-grid--header-label"
+                    className="data-grid-table-header-label"
                 >
                     {col.label}
                 </span>

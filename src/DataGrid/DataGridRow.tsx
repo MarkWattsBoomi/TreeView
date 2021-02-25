@@ -1,7 +1,7 @@
 import React, { CSSProperties } from "react";
 
 import DataGrid from "./DataGrid";
-import { FlowDisplayColumn, FlowOutcome, modalDialogButton } from "flow-component-model";
+import { eContentType, FlowDisplayColumn, FlowOutcome, modalDialogButton } from "flow-component-model";
 import { DataGridColumn, DataGridItem } from "./DataGridItem";
 
 export default class DataGridRow extends React.Component<any,any> {
@@ -16,8 +16,21 @@ export default class DataGridRow extends React.Component<any,any> {
     valueChanged(e: any, colName: string) {
         const root: DataGrid = this.props.root;
         const row: DataGridItem = root.rowMap.get(this.props.rowId);
-        const oldVal: string = row.columns.get(colName).value;
-        const newVal: string = e.target.value;
+        let oldVal: any = row.columns.get(colName).value;
+        let newVal: any; 
+
+        switch(row.columns.get(colName).type) {
+            case eContentType.ContentNumber:
+                newVal = parseInt(e.target.value);
+                break;
+            
+            default:
+                oldVal = e.target.value;
+                break;
+
+        }
+        
+        
 
         if(oldVal !== newVal) {
             root.rowValueChanged(this.props.rowId, colName, oldVal, newVal)
@@ -63,9 +76,12 @@ export default class DataGridRow extends React.Component<any,any> {
                 buttons.push(
                     <span 
                         key={key}
-                        className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " treeview-node-button"} 
+                        className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " data-grid-column-button"} 
                         title={outcome.label || key}
-                        onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, row.id)}}
+                        onClick={(e: any) => {
+                            e.stopPropagation(); 
+                            root.doOutcome(key, row.id)
+                        }}
                     />
                 );
             }
@@ -74,7 +90,7 @@ export default class DataGridRow extends React.Component<any,any> {
         if(root.getAttribute("ButtonPositionRight","false").toLowerCase() !== "true"){
             content.push(
                 <td
-                    className = "select-view-table-buttons-body"
+                    className = "data-grid-table-buttons-column"
                 >
                     {buttons}
                 </td>
@@ -102,17 +118,20 @@ export default class DataGridRow extends React.Component<any,any> {
                             type="text"
                             defaultValue={col.value}
                             className="data-grid-column-edit"
-                            onBlur={(e: any) => {this.valueChanged(e, col.name)}}
+                            onBlur={(e: any) => {
+                                e.stopPropagation(); 
+                                this.valueChanged(e, col.name);
+                            }}
                         />
                     );
                 }
 
                 content.push(
-                    <div
-                        className="data-grid-column"
+                    <td
+                        className={"data-grid-table-column data-grid-table-column-" + col.name}
                     >
                         {cell}
-                    </div>
+                    </td>
                 );
             }
             else {
@@ -134,7 +153,7 @@ export default class DataGridRow extends React.Component<any,any> {
                 }
                 content.push(
                     <div
-                        className="data-grid-column-buttons"
+                        className="data-grid-table-buttons-column"
                     >
                         {infoButton}
                     </div>
@@ -146,7 +165,7 @@ export default class DataGridRow extends React.Component<any,any> {
         if(root.getAttribute("ButtonPositionRight","false").toLowerCase() === "true"){
             content.push(
                 <td
-                    className = "select-view-table-buttons-body"
+                    className = "data-grid-table-buttons-column"
                 >
                     {buttons}
                 </td>
@@ -155,7 +174,7 @@ export default class DataGridRow extends React.Component<any,any> {
         
         return (
             <tr
-                className={"data-grid-row" + selectedClass}
+                className={"data-grid-table-row" + selectedClass}
                 onClick={(e: any) => {root.doOutcome("OnSelect",row.id)}}
                 style={style}
             >

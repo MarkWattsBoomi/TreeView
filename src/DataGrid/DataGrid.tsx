@@ -6,6 +6,7 @@ import { eDebugLevel } from '..';
 import { DataGridColumn, DataGridItem } from './DataGridItem';
 import DataGridRow from './DataGridRow';
 import DataGridHeader from './DataGridHeader';
+import DataGridFooter from './DataGridFooter';
 
 
 //declare const manywho: IManywho;
@@ -26,6 +27,9 @@ export default class DataGrid extends FlowComponent {
     colComponents: Map<string,DataGridHeader> = new Map();
     colElements: Array<DataGridHeader> = [];
 
+    footerComponent: DataGridFooter;
+    footerElement: any;
+
     
     matchingRows:  Map<string,string> = new Map();
 
@@ -43,6 +47,7 @@ export default class DataGrid extends FlowComponent {
         this.flowMoved = this.flowMoved.bind(this);
         this.doOutcome = this.doOutcome.bind(this);
         this.setRow = this.setRow.bind(this); 
+        this.setFooter = this.setFooter.bind(this); 
         this.filterTable = this.filterTable.bind(this);
         this.filterTableClear = this.filterTableClear.bind(this);
         this.searchKeyEvent = this.searchKeyEvent.bind(this);
@@ -59,11 +64,20 @@ export default class DataGrid extends FlowComponent {
         }
     }
 
-    async flowMoved(msg: any) {
-        this.debug("flow moved",eDebugLevel.verbose);
-        this.buildTableFromModel(this.model.dataSource.items);
-        //await this.pushModelToState();
-        this.refreshSelectedFromState();
+    async flowMoved(xhr: any, request: any) {
+        let me: any = this;
+        if(xhr.invokeType==="FORWARD") {
+            if(this.loadingState !== eLoadingState.ready){
+                window.setTimeout(function() {me.flowMoved(xhr, request)},500);
+            }
+            else {
+                this.debug("flow moved",eDebugLevel.verbose);
+                this.buildTableFromModel(this.model.dataSource.items);
+                //await this.pushModelToState();
+                this.refreshSelectedFromState();
+                this.forceUpdate();
+            }
+        }
     }
 
     async componentDidMount() {
@@ -119,6 +133,10 @@ export default class DataGrid extends FlowComponent {
                 this.rowComponents.delete(key);
             }
         }
+    }
+
+    setFooter(element: DataGridFooter) {
+        this.footerComponent = element;
     }
 
     setCol(key: any, element: DataGridHeader) {
@@ -391,7 +409,26 @@ export default class DataGrid extends FlowComponent {
                 );
             });
         }
+
+        //add padder row
+        elements.push(
+            <tr
+            className="data-grid-table-filler-row"
+            />
+        );
         
+        
+        return elements;
+    }
+
+    buildFooter() : Array<any>{
+        const elements: Array<any> = [];
+        elements.push(
+            <DataGridFooter 
+                root={this}
+                ref={(element: DataGridFooter) => {this.setFooter(element)}}
+            />
+        );
         return elements;
     }
 
@@ -425,7 +462,7 @@ export default class DataGrid extends FlowComponent {
         //construct table REACT elements
         this.colElements = this.buildTableHeaders();
         this.rowElements = this.buildTable();
-        
+        this.footerElement = this.buildFooter();
 
         //handle classes attribute and hidden and size
         let classes: string = "data-grid " + this.getAttribute("classes","");
@@ -491,16 +528,25 @@ export default class DataGrid extends FlowComponent {
                     <table
                         className="data-grid-table"
                     >
-                        <thead>
+                        <thead
+                            className="data-grid-table-head"
+                        >
                             <tr
                                 className="data-grid-table-headers"
                             >
                                 {this.colElements}
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody
+                            className="data-grid-table-body"
+                        >
                             {this.rowElements}
                         </tbody>
+                        <tfoot
+                            className="data-grid-table-footer"
+                        >
+                            {this.footerElement}
+                        </tfoot>
                     </table>
                 </div>
                 
