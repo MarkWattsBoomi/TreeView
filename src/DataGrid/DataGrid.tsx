@@ -290,12 +290,21 @@ export default class DataGrid extends FlowComponent {
             
             if (outcome.isBulkAction && outcome.developerName !== "OnSelect" && outcome.developerName !== "OnChange" && !outcome.developerName.toLowerCase().startsWith("cm")) {
                 content.push(
-                    <span 
+                    <div
+                        className={"data-grid-header-button"}
                         key={key}
-                        className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " data-grid-header-button"} 
                         title={outcome.label || key}
                         onClick={(e: any) => {this.doOutcome(key, undefined)}}
-                    />
+                    >
+                        <span 
+                            className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " data-grid-header-button-icon"} 
+                        />
+                        <span 
+                            className={"data-grid-header-button-label"} 
+                        >
+                            {outcome.label || key}
+                        </span>
+                    </div>
                 );
             }
         });

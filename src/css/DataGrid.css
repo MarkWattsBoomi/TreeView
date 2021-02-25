@@ -105,10 +105,26 @@
 }
 
 .data-grid-header-button {
-    color: #fefefe;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
     margin-right: 1rem;
-    top: 0 !important;
+    color: #fefefe;
+}
+
+.data-grid-header-button:hover {
+    color: #ff7c66;
+    cursor: pointer;
+}
+
+.data-grid-header-button-icon {
     font-size: 1.2rem;
+    margin-right: 0.5rem;
+    top: 0px !important;
+}
+
+.data-grid-header-button-label {
+    font-size: 1rem;
 }
 
 .data-grid-table {
