@@ -175,7 +175,7 @@ export default class DataGridRow extends React.Component<any,any> {
         return (
             <tr
                 className={"data-grid-table-row" + selectedClass}
-                onClick={(e: any) => {root.doOutcome("OnSelect",row.id)}}
+                //onClick={(e: any) => {root.doOutcome("OnSelect",row.id)}}
                 style={style}
             >
                 {content}

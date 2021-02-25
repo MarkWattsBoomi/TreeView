@@ -185,16 +185,29 @@ export default class DataGrid extends FlowComponent {
                     //if it's OnChange then add item to modified list
                     if(outcomeName === "OnChange"){
                         this.modifiedRows.set(selectedItem,selectedItem);
-                    }
-                    //if multi select then we are working on a selected subset
-                    if(this.model.multiSelect === true) {
-                        //we only store subset
-                        await this.pushSelectedToState();
+                        console.log("added " + selectedItem + " to modified");
+                        //if multi select then we are working on a selected subset
+                        if(this.model.multiSelect === true) {
+                            //we only store subset
+                            await this.pushModifiedToState();
+                        }
+                        else {
+                            // we store entire model to state
+                            await this.pushModelToState();
+                        }
                     }
                     else {
-                        // we store entire model to state
-                        await this.pushModelToState();
+                        //if multi select then we are working on a selected subset
+                        if(this.model.multiSelect === true) {
+                            //we only store subset
+                            await this.pushSelectedToState();
+                        }
+                        else {
+                            // we store entire model to state
+                            await this.pushModelToState();
+                        }
                     }
+                    
                 } 
                 else {
                     // its a single object state
@@ -220,7 +233,7 @@ export default class DataGrid extends FlowComponent {
     }
 
     async rowValueChanged(rowId: string, colName: string, oldVal: string, newVal: any) {
-        console.log(rowId + "," + colName +" = " + oldVal + "=>" +  newVal);
+        console.log("proj=" + this.rowMap.get(rowId).objectData.properties["project_number"].value + " ," +rowId + "," + colName +" = " + oldVal + "=>" +  newVal);
 
         this.rowMap.get(rowId).objectData.properties[colName].value = newVal;
 
@@ -228,6 +241,7 @@ export default class DataGrid extends FlowComponent {
     }
 
     async pushModelToState() {
+        console.log("pushing entire model to state");
         let updateData: FlowObjectDataArray = new FlowObjectDataArray();
         this.rowMap.forEach((item: DataGridItem) => {
             if(this.modifiedRows?.has(item.id)){
@@ -242,6 +256,7 @@ export default class DataGrid extends FlowComponent {
     }
 
     async pushModifiedToState() {
+        console.log("pushing modified to state");
         let updateData: FlowObjectDataArray = new FlowObjectDataArray();
         this.rowMap.forEach((item: DataGridItem) => {
             if(this.modifiedRows?.has(item.id)){
@@ -253,6 +268,7 @@ export default class DataGrid extends FlowComponent {
     }
 
     async pushSelectedToState() {
+        console.log("pushing selected to state");
         let updateData: FlowObjectDataArray = new FlowObjectDataArray();
         this.rowMap.forEach((item: DataGridItem) => {
             if(this.selectedRows?.has(item.id)){
