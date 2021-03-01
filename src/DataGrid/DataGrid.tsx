@@ -422,25 +422,34 @@ export default class DataGrid extends FlowComponent {
 
     buildTable() : Array<any>{
         const elements: Array<any> = [];
-        if(this.rowMap) {
-            this.rowMap.forEach((node: DataGridItem) => {
-                elements.push(
-                    <DataGridRow 
-                        key={node.id}
-                        root={this}
-                        rowId={node.id}
-                        ref={(element: DataGridRow) => {this.setRow(node.id ,element)}}
-                    />
-                );
-            });
-        }
+        if(this.rowMap.size > 0) {
+            if(this.rowMap) {
+                this.rowMap.forEach((node: DataGridItem) => {
+                    elements.push(
+                        <DataGridRow 
+                            key={node.id}
+                            root={this}
+                            rowId={node.id}
+                            ref={(element: DataGridRow) => {this.setRow(node.id ,element)}}
+                        />
+                    );
+                });
+            }
 
-        //add padder row
-        elements.push(
-            <tr
-            className="data-grid-table-filler-row"
-            />
-        );
+            //add padder row
+            elements.push(
+                <tr
+                className="data-grid-table-filler-row"
+                />
+            );
+        }
+        else {
+            elements.push(
+                <tr
+                    style={{height: 'calc(100% + 1px)'}}
+                />
+            );
+        }
         
         
         return elements;
