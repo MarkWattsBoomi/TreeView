@@ -21,7 +21,10 @@ export default class DataGridRow extends React.Component<any,any> {
 
         switch(row.columns.get(colName).type) {
             case eContentType.ContentNumber:
-                newVal = parseInt(e.target.value);
+                newVal = parseFloat(e.target.value).toFixed(2);
+                if(newVal>99) {
+                    newVal = 99;
+                }
                 break;
             
             default:

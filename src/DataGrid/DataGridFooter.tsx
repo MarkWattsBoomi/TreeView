@@ -59,7 +59,7 @@ export default class DataGridFooter extends React.Component<any,any> {
                     <span
                         className={"data-grid-table-footer-cell-value data-grid-table-footer-cell-value-" + col.developerName}
                     >
-                        {summaryVals.get(col.developerName)}
+                        {summaryVals.get(col.developerName)?.toFixed(2)}
                     </span>
                 </td>
             );
@@ -82,16 +82,3 @@ export default class DataGridFooter extends React.Component<any,any> {
         );
     }
 }
-/*
-if(this.rowMap) {
-    this.rowMap.forEach((node: DataGridItem) => {
-        elements.push(
-            <DataGridFooter 
-                key={node.id}
-                root={this}
-                rowId={node.id}
-                ref={(element: DataGridRow) => {this.setRow(node.id ,element)}}
-            />
-        );
-    });
-}*/
