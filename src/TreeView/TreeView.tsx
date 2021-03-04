@@ -88,11 +88,15 @@ export default class TreeView extends FlowComponent {
         let me: any = this;
         if(xhr.invokeType==="FORWARD") {
             if(this.loadingState !== eLoadingState.ready){
+                console.log("move: waiting for ready");
                 window.setTimeout(function() {me.flowMoved(xhr, request)},500);
             }
             else {
+                console.log("move: ready now");
+                /*
                 this.buildTreeFromModel(this.model.dataSource.items,0);
                 this.refreshSelectedFromState();
+                */
             }
         }
         
@@ -111,6 +115,7 @@ export default class TreeView extends FlowComponent {
     }
 
     async refreshSelectedFromState() {
+        let start: number = new Date().getTime();
         let state: FlowObjectData = this.getStateValue() as FlowObjectData;
         this.selectedNodeId = undefined;
         if(state) {
@@ -124,6 +129,8 @@ export default class TreeView extends FlowComponent {
             }
         }
         this.expandToSelected();
+        let tot: number = new Date().getTime() - start;
+        this.debug("refreshSelectedFromState=" + (tot/1000),eDebugLevel.error);
         this.forceUpdate();
     }
 
@@ -482,10 +489,7 @@ export default class TreeView extends FlowComponent {
             node.itemType = item.properties["ITEM_TYPE"]?.value as string;
             node.children = new Map();
             node.objectData = item;
-            if(item.properties["IS_LOCKED"]?.value === "Y" || item.properties["SELECTABLE_CHILDREN"]?.value === "N") {
-                console.log("locked=" + item.properties["ITEM_NAME"]?.value);
-            }
-
+            
             //add to flat tree for easy searching
             this.flatTree.set(node.itemId,node);
         });

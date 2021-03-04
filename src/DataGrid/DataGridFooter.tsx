@@ -59,7 +59,7 @@ export default class DataGridFooter extends React.Component<any,any> {
                     <span
                         className={"data-grid-table-footer-cell-value data-grid-table-footer-cell-value-" + col.developerName}
                     >
-                        {summaryVals.get(col.developerName)?.toFixed(2)}
+                        {summaryVals.get(col.developerName)?.toFixed(2).toString()}
                     </span>
                 </td>
             );
