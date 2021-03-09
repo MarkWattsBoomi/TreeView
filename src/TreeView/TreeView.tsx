@@ -76,6 +76,8 @@ export default class TreeView extends FlowComponent {
         this.absoluteMaxResults = parseInt(this.getAttribute("AbsoluteMaxSearchResults","1000"));
     
         this.defaultExpanded=this.getAttribute("StartExpanded","false").toLowerCase() === "true";
+
+        
     }
 
     debug(message: string, debugLevel: eDebugLevel) {
