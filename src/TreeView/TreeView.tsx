@@ -5,6 +5,7 @@ import '../css/treeview.css';
 import TreeViewNode from './TreeViewNode';
 import TreeViewItem from './TreeViewItem';
 import FlowContextMenu from 'flow-component-model/lib/Dialogs/FlowContextMenu';
+import Services from '../Services';
 
 //declare const manywho: IManywho;
 declare const manywho: any;
@@ -109,8 +110,12 @@ export default class TreeView extends FlowComponent {
         await super.componentDidMount();
         
         // build tree
-        this.buildTreeFromModel(this.model.dataSource.items,0);
-        
+        if(this.getAttribute("apiEndpoint")) {
+            this.buildTreeFromApi(this.getAttribute("apiEndpoint"), this.getAttribute("apiUser"),this.getAttribute("apiToken"));
+        }
+        else {
+            this.buildTreeFromModel(this.model.dataSource.items,0);
+        }
         (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
 
         this.refreshSelectedFromState();
@@ -477,23 +482,8 @@ export default class TreeView extends FlowComponent {
         this.flatTree = new Map();
         let start: number = new Date().getTime();
         items.forEach((item: FlowObjectData) => {
-            //construct TreeViewItem
-            let node = new TreeViewItem();
-            node.itemLevel = level;
-            node.id = item.internalId;
-            node.itemId = item.properties["ITEM_ID"]?.value as number;
-            node.parentItemId = item.properties["PARENT_ID"]?.value as number
-            node.itemName = item.properties["ITEM_NAME"]?.value as string;
-            node.itemDescription = item.properties["ITEM_DESCRIPTION"]?.value as string;
-            node.itemStatus = item.properties["ITEM_STATUS"]?.value as string;
-            node.itemLocked = item.properties["IS_LOCKED"]?.value as string;
-            node.itemSelectable = item.properties["SELECTABLE_CHILDREN"]?.value as string;
-            node.itemType = item.properties["ITEM_TYPE"]?.value as string;
-            node.children = new Map();
-            node.objectData = item;
-            
-            //add to flat tree for easy searching
-            this.flatTree.set(node.itemId,node);
+            let tvi: TreeViewItem = TreeViewItem.fromObjectData(this,item);
+            this.flatTree.set(tvi.itemId,tvi);
         });
 
         this.flatTree = new Map(Array.from(this.flatTree).sort((a: any,b: any) => {
@@ -542,6 +532,67 @@ export default class TreeView extends FlowComponent {
     
         let tot: number = new Date().getTime() - start;
         this.debug("buildTreeFromModel=" + (tot/1000),eDebugLevel.error);
+ 
+    }
+
+    async buildTreeFromApi(endpoint: string, user: string, token: string){
+
+        let items: TreeViewItem[] = await Services.getHierarchyItems(this, endpoint, user, token);
+        this.nodeTree = new Map();
+        this.flatTree = new Map();
+        let start: number = new Date().getTime();
+        items.forEach((item: TreeViewItem) => {
+             //add to flat tree for easy searching
+            this.flatTree.set(item.itemId,item);
+        });
+
+        this.flatTree = new Map(Array.from(this.flatTree).sort((a: any,b: any) => {
+            switch(true) {
+                case a[1].itemName > b[1].itemName:
+                    return 1;
+                case a[1].itemName === b[1].itemName:
+                    return 0;
+                default: 
+                    return -1;
+
+            }
+        }));
+
+        this.flatTree.forEach((item: TreeViewItem) => {
+
+            let parent = this.flatTreeFind(item.parentItemId); //this.flatTree.get(item.parentItemId);
+            if(parent) {
+                item.setItemLevel(parent.itemLevel + 1);
+                parent.children.set(item.itemId, item);
+            }
+            else {
+                // my parent isn't in tree yet, just add me at root
+                item.setItemLevel(0);
+                this.nodeTree.set(item.itemId, item);
+            }
+        });
+
+        // now all items are in tree re-iterate looking for parents
+        this.nodeTree.forEach((topLevel: TreeViewItem) => {
+            //we wont do this if the top level has a 0 or -1 parent id or the parent id= itme id
+            let parent = this.flatTree.get(topLevel.parentItemId)
+            if(parent && !(parent.itemId===topLevel.itemId)) {
+                topLevel.setItemLevel(parent.itemLevel + 1);
+                parent.children.set(topLevel.itemId, topLevel);
+                this.nodeTree.delete(topLevel.itemId);
+            }
+        });
+
+        //now tree is completely built, re-iterate sorting
+        this.nodeTree.forEach((topLevel: TreeViewItem) => {
+            this.sortTreeNodeChildren(topLevel,false);
+        });
+
+        this.nodeElementTree = this.buildTree(this.nodeTree);
+    
+        let tot: number = new Date().getTime() - start;
+        this.debug("buildTreeFromJSON=" + (tot/1000),eDebugLevel.error);
+        this.forceUpdate();
  
     }
 
