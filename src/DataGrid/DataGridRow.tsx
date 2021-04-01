@@ -28,7 +28,7 @@ export default class DataGridRow extends React.Component<any,any> {
                 break;
             
             default:
-                oldVal = e.target.value;
+                newVal = e.target.value;
                 break;
 
         }
