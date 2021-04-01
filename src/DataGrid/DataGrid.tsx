@@ -7,6 +7,7 @@ import { DataGridColumn, DataGridItem } from './DataGridItem';
 import DataGridRow from './DataGridRow';
 import DataGridHeader from './DataGridHeader';
 import DataGridFooter from './DataGridFooter';
+import DataGridHeaderButtons from './DataGridHeaderButtons';
 
 
 //declare const manywho: IManywho;
@@ -26,6 +27,8 @@ export default class DataGrid extends FlowComponent {
     colMap: Map<string,FlowDisplayColumn> = new Map();
     colComponents: Map<string,DataGridHeader> = new Map();
     colElements: Array<DataGridHeader> = [];
+
+    headerButtons: DataGridHeaderButtons;
 
     footerComponent: DataGridFooter;
     footerElement: any;
@@ -52,6 +55,7 @@ export default class DataGrid extends FlowComponent {
         this.filterTableClear = this.filterTableClear.bind(this);
         this.searchKeyEvent = this.searchKeyEvent.bind(this);
         this.refreshSelectedFromState = this.refreshSelectedFromState.bind(this);
+        this.loadSupportingfields = this.loadSupportingfields.bind(this);
 
         let dbl: number = parseInt(this.getAttribute("DebugLevel","0"));
               this.debugLevel = dbl || eDebugLevel.error ;
@@ -72,11 +76,25 @@ export default class DataGrid extends FlowComponent {
             }
             else {
                 this.debug("flow moved",eDebugLevel.verbose);
+                await this.loadSupportingfields();
                 this.buildTableFromModel(this.model.dataSource.items);
-                //await this.pushModelToState();
                 this.refreshSelectedFromState();
                 this.forceUpdate();
             }
+        }
+    }
+
+    async loadSupportingfields() : Promise<any>{
+        const extrafields: string[] = [];
+        Object.keys(this.outcomes).forEach((key: string) => {
+            const outcome: FlowOutcome = this.outcomes[key];
+            if(outcome.attributes["EnabledOn"]) {
+                extrafields.push(outcome.attributes["EnabledOn"].value);
+            }
+        });
+
+        for(let ocn of extrafields) {
+            await this.loadValue(ocn);
         }
     }
 
@@ -84,13 +102,12 @@ export default class DataGrid extends FlowComponent {
         //will get this from a component attribute
         await super.componentDidMount();
         (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
+        
+        await this.loadSupportingfields();
         // build tree
         this.buildTableFromModel(this.model.dataSource.items);
-
-        //await this.pushModelToState();
-
         this.refreshSelectedFromState();
-        
+        this.forceUpdate();        
     }
 
     async refreshSelectedFromState() {
@@ -279,19 +296,27 @@ export default class DataGrid extends FlowComponent {
         await this.setStateValue(updateData);
     }
    
-    buildHeaderButtons() : Array<any> {
+    async buildHeaderButtons() : Promise<Array<any>> {
         let content : any = [];
 
         let lastOrder: number = 0;
         let addedExpand: boolean = false;
         let addedContract: boolean = false;
-        Object.keys(this.outcomes).forEach((key: string) => {
+        Object.keys(this.outcomes).forEach(async (key: string) => {
             const outcome: FlowOutcome = this.outcomes[key];
             
             if (outcome.isBulkAction && outcome.developerName !== "OnSelect" && outcome.developerName !== "OnChange" && !outcome.developerName.toLowerCase().startsWith("cm")) {
+                let className = "data-grid-header-button";
+                if(outcome.attributes["enabledOn"]) {
+                    let enabledField: FlowField = await this.loadValue(outcome.attributes["enabledOn"].value);
+                    if(enabledField.value !== "true") {
+                        className = "data-grid-header-button-dissabled";
+                    }
+                }
+                
                 content.push(
                     <div
-                        className={"data-grid-header-button"}
+                        className={className}
                         key={key}
                         title={outcome.label || key}
                         onClick={(e: any) => {this.doOutcome(key, undefined)}}
@@ -306,6 +331,7 @@ export default class DataGrid extends FlowComponent {
                         </span>
                     </div>
                 );
+                
             }
         });
         
@@ -511,8 +537,7 @@ export default class DataGrid extends FlowComponent {
             style.height=this.model.height + "px"
         }
         
-        let headerButtons: Array<any> = this.buildHeaderButtons();
-      
+             
         let title:  string = this.model.label || "";
         
         this.lastContent = (
@@ -550,11 +575,11 @@ export default class DataGrid extends FlowComponent {
                         />
 
                     </div>
-                    <div
-                        className="data-grid-header-buttons"
-                    >
-                        {headerButtons}
-                    </div>
+                    <DataGridHeaderButtons 
+                        root={this}
+                        ref={(element: DataGridHeaderButtons) => {this.headerButtons = element}}
+                    />
+                    
                 </div>
                 <div
                     className="data-grid-body"
