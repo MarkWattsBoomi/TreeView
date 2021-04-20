@@ -9,6 +9,7 @@ export default class DataGridRow extends React.Component<any,any> {
     constructor(props: any) {
         super(props);
         this.valueChanged = this.valueChanged.bind(this);
+        this.valueLeft = this.valueLeft.bind(this);
     }
 
    
@@ -37,6 +38,33 @@ export default class DataGridRow extends React.Component<any,any> {
 
         if(oldVal !== newVal) {
             root.rowValueChanged(this.props.rowId, colName, oldVal, newVal)
+        }
+    }
+
+    valueLeft(e: any, colName: string) {
+        const root: DataGrid = this.props.root;
+        const row: DataGridItem = root.rowMap.get(this.props.rowId);
+        let oldVal: any = row.columns.get(colName).value;
+        let newVal: any; 
+
+        switch(row.columns.get(colName).type) {
+            case eContentType.ContentNumber:
+                newVal = parseFloat(e.target.value).toFixed(2);
+                //if(newVal>99) {
+                //    newVal = 99;
+                //}
+                break;
+            
+            default:
+                newVal = e.target.value;
+                break;
+
+        }
+        
+        
+
+        if(oldVal !== newVal) {
+            root.rowValueComplete(this.props.rowId, colName, oldVal, newVal)
         }
     }
 
@@ -122,6 +150,10 @@ export default class DataGridRow extends React.Component<any,any> {
                             defaultValue={col.value}
                             className="data-grid-column-edit"
                             onBlur={(e: any) => {
+                                e.stopPropagation(); 
+                                this.valueLeft(e, col.name);
+                            }}
+                            onChange={(e: any) => {
                                 e.stopPropagation(); 
                                 this.valueChanged(e, col.name);
                             }}

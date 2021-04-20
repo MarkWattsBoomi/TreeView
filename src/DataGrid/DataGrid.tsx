@@ -254,6 +254,31 @@ export default class DataGrid extends FlowComponent {
 
         this.rowMap.get(rowId).objectData.properties[colName].value = newVal;
 
+        if(this.getStateValueType() === eContentType.ContentList) {
+           
+            this.modifiedRows.set(rowId,rowId);
+
+            if(this.model.multiSelect === true) {
+                //we only store subset
+                await this.pushModifiedToState();
+            }
+            else {
+                // we store entire model to state
+                await this.pushModelToState();
+            }
+        } 
+        else {
+            // its a single object state
+            
+            await this.pushSelectedToState();
+        }
+    }
+
+    async rowValueComplete(rowId: string, colName: string, oldVal: string, newVal: any) {
+        console.log("proj=" + this.rowMap.get(rowId).objectData.properties["project_number"].value + " ," +rowId + "," + colName +" = " + oldVal + "=>" +  newVal);
+
+        this.rowMap.get(rowId).objectData.properties[colName].value = newVal;
+
         await this.doOutcome("OnChange",rowId);
     }
 
