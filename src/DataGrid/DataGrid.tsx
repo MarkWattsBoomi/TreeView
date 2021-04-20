@@ -272,6 +272,7 @@ export default class DataGrid extends FlowComponent {
             
             await this.pushSelectedToState();
         }
+        this.footerComponent?.forceUpdate();
     }
 
     async rowValueComplete(rowId: string, colName: string, oldVal: string, newVal: any) {
