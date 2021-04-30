@@ -19,7 +19,7 @@ export default class DataGridHeaderButtons extends React.Component<any,any> {
                 let className = "data-grid-header-button";
                 if(outcome.attributes["EnabledOn"]) {
                     let enabledField: FlowField = root.fields[outcome.attributes["EnabledOn"].value];
-                    if((enabledField.value as string).toLowerCase() !==  "true") {
+                    if(!enabledField || (enabledField.value as string).toLowerCase() !==  "true") {
                         className += " data-grid-header-button-dissabled";
                     }
                 }
