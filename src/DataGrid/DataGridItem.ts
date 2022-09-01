@@ -1,8 +1,8 @@
-import { eContentType, FlowObjectData } from "flow-component-model";
+import { eContentType, FlowObjectData } from 'flow-component-model';
 
 export class DataGridItem {
     id: string;
-    columns: Map<any,DataGridColumn> = new Map();
+    columns: Map<any, DataGridColumn> = new Map();
     objectData: FlowObjectData;
 }
 
@@ -13,8 +13,8 @@ export class DataGridColumn {
     value: any;
 
     constructor(name: string, label: string, type: eContentType, value: any) {
-        this.name=name;
-        this.type=type;
-        this.value=value;
+        this.name = name;
+        this.type = type;
+        this.value = value;
     }
 }

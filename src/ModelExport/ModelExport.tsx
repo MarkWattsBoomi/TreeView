@@ -52,146 +52,139 @@ export default class ModelExport extends FlowComponent {
         let headers: string = '';
         let row: string = '';
 
-
         // this will hold an array of all found child attribute names.
         // it will ultimately be used to order / construct the output
-        let columns: Array<string> = [];
+        let columns: string[] = [];
 
         // an array of maps.  each array item is an object data and its map of cols / attributes keyed on name
-        const values: Array<Map<string,any>> = [];
-        
-        //loop over the datasource adding it's props to the vals map
+        const values: Array<Map<string, any>> = [];
+
+        // loop over the datasource adding it's props to the vals map
         this.model.dataSource.items.forEach((item: FlowObjectData) => {
-            //create new map for this item
-            let value: Map<string,any> = new Map();
-            
+            // create new map for this item
+            const value: Map<string, any> = new Map();
+
             // loop over props adding each one
             Object.keys(item.properties).forEach((key: string) => {
-                let prop: FlowObjectDataProperty = item.properties[key];
-                
-                switch(prop.contentType){
+                const prop: FlowObjectDataProperty = item.properties[key];
+
+                switch (prop.contentType) {
                     case eContentType.ContentList:
-                        let subvals: Map<string,string> = new Map();
-                        let children: FlowObjectDataArray = prop.value as FlowObjectDataArray;
+                        const subvals: Map<string, string> = new Map();
+                        const children: FlowObjectDataArray = prop.value as FlowObjectDataArray;
                         children.items.forEach((item: FlowObjectData) => {
-                            subvals.set(item.properties["ATTRIBUTE_DISPLAY_NAME"].value as string , item.properties["ATTRIBUTE_VALUE"].value as string);
-                            if(columns.indexOf(item.properties["ATTRIBUTE_DISPLAY_NAME"].value as string) < 0) {
-                               columns.push(item.properties["ATTRIBUTE_DISPLAY_NAME"].value as string);
+                            subvals.set(item.properties['ATTRIBUTE_DISPLAY_NAME'].value as string , item.properties['ATTRIBUTE_VALUE'].value as string);
+                            if (columns.indexOf(item.properties['ATTRIBUTE_DISPLAY_NAME'].value as string) < 0) {
+                               columns.push(item.properties['ATTRIBUTE_DISPLAY_NAME'].value as string);
                             }
                         });
                         value.set(prop.developerName, subvals);
                         break;
-    
+
                     default:
                         value.set(prop.developerName, prop.value);
                         break;
                 }
-            })
+            });
 
             // add this item to the array
             values.push(value);
         });
 
-        //now sort sub columns
-        let collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
-        columns = columns.sort((a: any,b: any) => collator.compare(a,b));
+        // now sort sub columns
+        const collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+        columns = columns.sort((a: any, b: any) => collator.compare(a, b));
 
-        //now sort columns
-        let dcolumns: Array<FlowDisplayColumn> = this.model.displayColumns.sort((a: any,b: any) => collator.compare(a.displayOrder,b.displayOrder));
-        
+        // now sort columns
+        const dcolumns: FlowDisplayColumn[] = this.model.displayColumns.sort((a: any, b: any) => collator.compare(a.displayOrder, b.displayOrder));
 
         // build headers
-        
+
         dcolumns.forEach((col: FlowDisplayColumn) => {
-            if(headers.length > 0) {
-                headers += ","
+            if (headers.length > 0) {
+                headers += ',';
             }
-            if(col.contentType === eContentType.ContentList) {
-                let subHeaders: string = "";
+            if (col.contentType === eContentType.ContentList) {
+                let subHeaders: string = '';
                 columns.forEach((key: string) => {
-                    if(subHeaders.length > 0) {
-                        subHeaders += ","
+                    if (subHeaders.length > 0) {
+                        subHeaders += ',';
                     }
-                    subHeaders += "\"" + key + "\"";
-                });  
-                headers += subHeaders;              
-            }
-            else {
-                headers += "\"" + col.label + "\"";
+                    subHeaders += '"' + key + '"';
+                });
+                headers += subHeaders;
+            } else {
+                headers += '"' + col.label + '"';
             }
         });
-        //now loop over the values referincing the display cols to build the row
-        
+        // now loop over the values referincing the display cols to build the row
+
         values.forEach((value: Map<string, any>) => {
-            row="";
+            row = '';
             dcolumns.forEach((col: FlowDisplayColumn) => {
-                if(row.length > 0) {
-                    row += ","
+                if (row.length > 0) {
+                    row += ',';
                 }
-                if(value.has(col.developerName)) {
-                    if(col.contentType === eContentType.ContentList) {
-                        let subRow: string = "";
-                        let children: Map<string,string> = value.get(col.developerName);
+                if (value.has(col.developerName)) {
+                    if (col.contentType === eContentType.ContentList) {
+                        let subRow: string = '';
+                        const children: Map<string, string> = value.get(col.developerName);
                         columns.forEach((key: string) => {
-                            if(subRow.length > 0) {
-                                subRow += ","
+                            if (subRow.length > 0) {
+                                subRow += ',';
                             }
-                            subRow += "\"" + (children.has(key) ? children.get(key) : "") + "\"";
+                            subRow += '"' + (children.has(key) ? children.get(key) : '') + '"';
                         });
                         row += subRow;
+                    } else {
+                        row += '"' + (value.has(col.developerName) ? value.get(col.developerName) : '') + '"';
+
                     }
-                    else {
-                        row += "\"" + (value.has(col.developerName) ? value.get(col.developerName) : "") + "\"";
-                        
-                    }
-                    
-                }
-                else {
-                    row += "\"\"";
+
+                } else {
+                    row += '""';
                 }
             });
             row += '\r\n';
             body += row;
         });
-        
-        
-        
+
         file = headers + '\r\n' + body;
 
         const blob = new Blob([file], { type: 'text/csv' });
         if (navigator.msSaveBlob) { // IE 10+
-            navigator.msSaveBlob(blob, this.getAttribute("ExportFileName","output") + '.csv');
+            navigator.msSaveBlob(blob, this.getAttribute('ExportFileName', 'output') + '.csv');
         } else {
             const link = document.createElement('a');
             if (link.download !== undefined) { // feature detection
                 // Browsers that support HTML5 download attribute
                 const url = URL.createObjectURL(blob);
                 link.setAttribute('href', url);
-                link.setAttribute('download', this.getAttribute("ExportFileName","output") + '.csv');
+                link.setAttribute('download', this.getAttribute('ExportFileName', 'output') + '.csv');
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
             }
         }
-        if(this.outcomes["OnExport"]) {
-            this.triggerOutcome("OnExport");
+        if (this.outcomes['OnExport']) {
+            this.triggerOutcome('OnExport');
         }
     }
 
-    buildHeaders(cols: Map<string,FlowDisplayColumn>, values: FlowObjectData) : string {
-        let headers: string = "";
+    buildHeaders(cols: Map<string, FlowDisplayColumn>, values: FlowObjectData): string {
+        let headers: string = '';
         cols.forEach((col: FlowDisplayColumn) => {
-            switch(col.contentType){
+            switch (col.contentType) {
                 case eContentType.ContentList:
-                    let children: FlowObjectDataArray = values.properties[col.developerName].value as FlowObjectDataArray;
+                    const children: FlowObjectDataArray = values.properties[col.developerName].value as FlowObjectDataArray;
                     children.items.forEach((item: FlowObjectData) => {
                         if (headers.length > 0) {
                             headers += ',';
                         }
-                        headers += '"' + item.properties["ATTRIBUTE_DISPLAY_NAME"].value + '"';
+                        headers += '"' + item.properties['ATTRIBUTE_DISPLAY_NAME'].value + '"';
                     });
-                    
+
                     break;
 
                 default:
@@ -201,25 +194,25 @@ export default class ModelExport extends FlowComponent {
                     headers += '"' + col.label + '"';
                     break;
             }
-           
+
         });
         headers += '\r\n';
         return headers;
     }
 
-    buildRow(cols: Map<string,FlowDisplayColumn>, values: FlowObjectData) : string { 
-        let row: string = ""
+    buildRow(cols: Map<string, FlowDisplayColumn>, values: FlowObjectData): string {
+        let row: string = '';
         cols.forEach((col: FlowDisplayColumn) => {
-            switch(col.contentType){
+            switch (col.contentType) {
                 case eContentType.ContentList:
-                    let children: FlowObjectDataArray = values.properties[col.developerName].value as FlowObjectDataArray;
+                    const children: FlowObjectDataArray = values.properties[col.developerName].value as FlowObjectDataArray;
                     children.items.forEach((item: FlowObjectData) => {
                         if (row.length > 0) {
                             row += ',';
                         }
-                        row += '"' + item.properties["ATTRIBUTE_VALUE"].value + '"';
+                        row += '"' + item.properties['ATTRIBUTE_VALUE'].value + '"';
                     });
-                    
+
                     break;
 
                 default:
@@ -229,7 +222,7 @@ export default class ModelExport extends FlowComponent {
                     row += '"' + values.properties[col.developerName].value + '"';
                     break;
             }
-           
+
         });
         row += '\r\n';
         return row;

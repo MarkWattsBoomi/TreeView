@@ -1,41 +1,40 @@
 import React, { CSSProperties } from 'react';
 
-import { eLoadingState, FlowComponent, FlowObjectDataArray, FlowObjectData, FlowOutcome, FlowDisplayColumn, FlowField, FlowMessageBox, FlowDialogBox, modalDialogButton } from 'flow-component-model';
-import '../css/SelectView.css';
-import { eDebugLevel } from '..';
-import SelectViewRow from './SelectViewRow';
-import {SelectViewItem, SelectViewColumn } from './SelectViewItem';
-import SelectViewHeader from './SelectViewColumn';
+import { eLoadingState, FlowComponent, FlowDialogBox, FlowDisplayColumn, FlowField, FlowMessageBox, FlowObjectData, FlowObjectDataArray, FlowOutcome, modalDialogButton } from 'flow-component-model';
 import FlowContextMenu from 'flow-component-model/lib/Dialogs/FlowContextMenu';
+import { eDebugLevel } from '..';
+import '../css/SelectView.css';
+import SelectViewHeader from './SelectViewColumn';
+import {SelectViewColumn, SelectViewItem } from './SelectViewItem';
+import SelectViewRow from './SelectViewRow';
 
-//declare const manywho: IManywho;
+// declare const manywho: IManywho;
 declare const manywho: any;
 
 export default class SelectView extends FlowComponent {
-    version: string="1.0.0";
+    version: string = '1.0.0';
     context: any;
     debugLevel: eDebugLevel = eDebugLevel.error;
 
-    selectedRows: Map<string,string> = new Map();
-    modifiedRows: Map<string,string> = new Map();
-    rowMap: Map<string,SelectViewItem> = new Map();
-    rowComponents: Map<string,SelectViewRow> = new Map();
-    rowElements: Array<SelectViewRow> = [];
-    
-    colMap: Map<string,FlowDisplayColumn> = new Map();
-    colComponents: Map<string,SelectViewHeader> = new Map();
-    colElements: Array<SelectViewHeader> = [];
+    selectedRows: Map<string, string> = new Map();
+    modifiedRows: Map<string, string> = new Map();
+    rowMap: Map<string, SelectViewItem> = new Map();
+    rowComponents: Map<string, SelectViewRow> = new Map();
+    rowElements: SelectViewRow[] = [];
+
+    colMap: Map<string, FlowDisplayColumn> = new Map();
+    colComponents: Map<string, SelectViewHeader> = new Map();
+    colElements: SelectViewHeader[] = [];
 
     messageBox: FlowMessageBox;
     dialogBox: FlowDialogBox;
     contextMenu: FlowContextMenu;
 
-    matchingRows:  Map<string,string> = new Map();
+    matchingRows: Map<string, string> = new Map();
 
-    lastContent: any = (<div></div>);
+    lastContent: any = (<div/>);
 
     searchBox: HTMLInputElement;
-       
 
     constructor(props: any) {
         super(props);
@@ -45,54 +44,52 @@ export default class SelectView extends FlowComponent {
         this.doOutcome = this.doOutcome.bind(this);
         this.setRow = this.setRow.bind(this);
         this.showContextMenu = this.showContextMenu.bind(this);
-        this.hideContextMenu = this.hideContextMenu.bind(this);  
+        this.hideContextMenu = this.hideContextMenu.bind(this);
         this.filterTable = this.filterTable.bind(this);
         this.filterTableClear = this.filterTableClear.bind(this);
         this.searchKeyEvent = this.searchKeyEvent.bind(this);
         this.refreshSelectedFromState = this.refreshSelectedFromState.bind(this);
         this.toggleAllSelected = this.toggleAllSelected.bind(this);
-        
 
-        let dbl: number = parseInt(this.getAttribute("DebugLevel","0"));
-              this.debugLevel = dbl || eDebugLevel.error ;
-        console.log("Debug Level = " + this.debugLevel);
+        const dbl: number = parseInt(this.getAttribute('DebugLevel', '0'));
+        this.debugLevel = dbl || eDebugLevel.error ;
+        console.log('Debug Level = ' + this.debugLevel);
     }
 
     debug(message: string, debugLevel: eDebugLevel) {
-        if(debugLevel.valueOf() <= this.debugLevel.valueOf()) {
+        if (debugLevel.valueOf() <= this.debugLevel.valueOf()) {
             console.log(message);
         }
     }
 
     async flowMoved(msg: any) {
         this.buildTableFromModel(this.model.dataSource.items);
-        //await this.pushModelToState();
+        // await this.pushModelToState();
         this.refreshSelectedFromState();
     }
 
-
     async componentDidMount() {
-        //will get this from a component attribute
+        // will get this from a component attribute
         await super.componentDidMount();
         (manywho as any).eventManager.addDoneListener(this.flowMoved, this.componentId);
         // build tree
         this.buildTableFromModel(this.model.dataSource.items);
 
-        //await this.pushModelToState();
+        // await this.pushModelToState();
 
         this.refreshSelectedFromState();
-        
+
     }
 
     async refreshSelectedFromState() {
         const state: any = this.getStateValue();
-        if(state) {
+        if (state) {
             state.items.forEach((item: FlowObjectData) => {
-                if(this.rowMap.has(item.internalId)) {
-                    this.selectedRows.set(item.internalId,item.internalId);
+                if (this.rowMap.has(item.internalId)) {
+                    this.selectedRows.set(item.internalId, item.internalId);
                 }
             });
-            //this.selectedRowId = state?.properties["ITEM_ID"]?.value as number;
+            // this.selectedRowId = state?.properties["ITEM_ID"]?.value as number;
         }
         this.forceUpdate();
     }
@@ -103,40 +100,37 @@ export default class SelectView extends FlowComponent {
     }
 
     setSearchBox(element: HTMLInputElement) {
-        if(element){
+        if (element) {
             this.searchBox = element;
-            this.searchBox.addEventListener("keyup",this.searchKeyEvent);
-        }
-        else {
-            if(this.searchBox) {
-                this.searchBox.removeEventListener("keyup",this.searchKeyEvent);
+            this.searchBox.addEventListener('keyup', this.searchKeyEvent);
+        } else {
+            if (this.searchBox) {
+                this.searchBox.removeEventListener('keyup', this.searchKeyEvent);
             }
         }
     }
 
     searchKeyEvent(event: KeyboardEvent) {
-        if(event.key.toLowerCase()==="enter") {
+        if (event.key.toLowerCase() === 'enter') {
             this.filterTable();
         }
     }
 
     setRow(key: string, element: SelectViewRow) {
-        if(element) {
-            this.rowComponents.set(key,element);
-        }
-        else {
-            if(this.rowComponents.has(key)) {
+        if (element) {
+            this.rowComponents.set(key, element);
+        } else {
+            if (this.rowComponents.has(key)) {
                 this.rowComponents.delete(key);
             }
         }
     }
 
     setCol(key: any, element: SelectViewHeader) {
-        if(element) {
-            this.colComponents.set(key,element);
-        }
-        else {
-            if(this.rowComponents.has(key)) {
+        if (element) {
+            this.colComponents.set(key, element);
+        } else {
+            if (this.rowComponents.has(key)) {
                 this.rowComponents.delete(key);
             }
         }
@@ -146,23 +140,20 @@ export default class SelectView extends FlowComponent {
         return this.rowComponents.get(key);
     }
 
+    async doOutcome(outcomeName: string, selectedItem?: string) {
 
-
-    async doOutcome(outcomeName: string, selectedItem? : string) {
-
-        //if there's a selectedItem then this must be being triggered at a row level.
-        //set the single item field if defined
-        if(selectedItem && this.getAttribute("RowLevelState","").length>0) {
-            let val: FlowField = await this.loadValue(this.getAttribute("RowLevelState"));
+        // if there's a selectedItem then this must be being triggered at a row level.
+        // set the single item field if defined
+        if (selectedItem && this.getAttribute('RowLevelState', '').length > 0) {
+            const val: FlowField = await this.loadValue(this.getAttribute('RowLevelState'));
             if (val) {
                 val.value = this.rowMap.get(selectedItem).objectData as FlowObjectData;
                 await this.updateValues(val);
             }
         }
-        if(this.outcomes[outcomeName]) {
+        if (this.outcomes[outcomeName]) {
             await this.triggerOutcome(outcomeName);
-        }
-        else {
+        } else {
             manywho.component.handleEvent(
                 this,
                 manywho.model.getComponent(
@@ -177,10 +168,10 @@ export default class SelectView extends FlowComponent {
     }
 
     async pushSelectedToState() {
-        let updateData: FlowObjectDataArray = new FlowObjectDataArray();
+        const updateData: FlowObjectDataArray = new FlowObjectDataArray();
         this.rowMap.forEach((item: SelectViewItem) => {
-            if(this.selectedRows?.has(item.id)){
-                item.objectData.isSelected=true;
+            if (this.selectedRows?.has(item.id)) {
+                item.objectData.isSelected = true;
                 updateData.addItem(item.objectData);
             }
         });
@@ -188,248 +179,242 @@ export default class SelectView extends FlowComponent {
     }
 
     rowSelected(rowId: string) {
-        if(!this.selectedRows.has(rowId)) {
-            this.selectedRows.set(rowId,rowId);
-        }
-        else {
+        if (!this.selectedRows.has(rowId)) {
+            this.selectedRows.set(rowId, rowId);
+        } else {
             this.selectedRows.delete(rowId);
         }
         this.pushSelectedToState();
-        this.doOutcome("OnSelect");
+        this.doOutcome('OnSelect');
         this.forceUpdate();
     }
-   
-    buildHeaderButtons() : Array<any> {
-        let content : any = [];
 
-        let lastOrder: number = 0;
-        let addedExpand: boolean = false;
-        let addedContract: boolean = false;
+    buildHeaderButtons(): any[] {
+        const content: any = [];
+
+        const lastOrder: number = 0;
+        const addedExpand: boolean = false;
+        const addedContract: boolean = false;
         Object.keys(this.outcomes).forEach((key: string) => {
             const outcome: FlowOutcome = this.outcomes[key];
-            
-            if (outcome.isBulkAction && outcome.developerName !== "OnSelect" && !outcome.developerName.toLowerCase().startsWith("cm")) {
+
+            if (outcome.isBulkAction && outcome.developerName !== 'OnSelect' && !outcome.developerName.toLowerCase().startsWith('cm')) {
                 content.push(
-                    <span 
+                    <span
                         key={key}
-                        className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " treeview-header-button"} 
+                        className={'glyphicon glyphicon-' + (outcome.attributes['icon']?.value || 'plus') + ' treeview-header-button'}
                         title={outcome.label || key}
-                        onClick={(e: any) => {this.doOutcome(key, undefined)}}
-                    />
+                        onClick={(e: any) => {this.doOutcome(key, undefined); }}
+                    />,
                 );
             }
         });
-        
+
         return content;
     }
-
-    
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // constructs the nodeTree and a flat a map of TreeViewItems from the model datasource data
     ///////////////////////////////////////////////////////////////////////////////////////////
-    buildTableFromModel(items : FlowObjectData[]){
+    buildTableFromModel(items: FlowObjectData[]) {
         this.rowMap = new Map();
         this.rowComponents = new Map();
 
-        //sort display cols on order
-        let cols: Array<FlowDisplayColumn> = this.model.displayColumns.sort((a: any,b: any) => {
-            switch(true) {
+        // sort display cols on order
+        const cols: FlowDisplayColumn[] = this.model.displayColumns.sort((a: any, b: any) => {
+            switch (true) {
                 case a.DisplayOrder > b.DisplayOrder:
                     return 1;
                 case a.DisplayOrder === b.DisplayOrder:
                     return 0;
-                default: 
+                default:
                     return -1;
             }
         });
 
-        
         cols.forEach((col: FlowDisplayColumn) => {
-            this.colMap.set(col.developerName,col);
+            this.colMap.set(col.developerName, col);
         });
-        
+
         items.forEach((item: FlowObjectData) => {
-            //construct Item
-            let node = new SelectViewItem();
+            // construct Item
+            const node = new SelectViewItem();
             node.id = item.internalId;
 
-            this.colMap.forEach((col:FlowDisplayColumn) => {
-                node.columns.set(col.developerName, new SelectViewColumn(col.developerName,col.label, col.contentType, item.properties[col.developerName]?.value as any));
+            this.colMap.forEach((col: FlowDisplayColumn) => {
+                node.columns.set(col.developerName, new SelectViewColumn(col.developerName, col.label, col.contentType, item.properties[col.developerName]?.value as any));
             });
-                        
+
             node.objectData = item;
 
-            this.rowMap.set(node.id,node);
+            this.rowMap.set(node.id, node);
         });
 
     }
 
     sortTable(property: String, descending?: boolean) {
         if (this.rowMap.size > 0) {
-            this.rowMap = new Map(Array.from(this.rowMap).sort((a: any,b: any) => {
-                if(descending && descending===true) {
-                    switch(true) {
+            this.rowMap = new Map(Array.from(this.rowMap).sort((a: any, b: any) => {
+                if (descending && descending === true) {
+                    switch (true) {
                         case a[1].property > b[1].itemName:
                             return -1;
                         case a[1].itemName === b[1].itemName:
                             return 0;
-                        default: 
+                        default:
                             return 1;
                     }
-                }
-                else {
-                    switch(true) {
+                } else {
+                    switch (true) {
                         case a[1].itemName > b[1].itemName:
                             return 1;
                         case a[1].itemName === b[1].itemName:
                             return 0;
-                        default: 
+                        default:
                             return -1;
                     }
                 }
-            }));           
+            }));
         }
     }
-   
+
     toggleAllSelected(e: any) {
-        if(!e.target.checked) {
+        if (!e.target.checked) {
             this.selectedRows.clear();
-        }
-        else {
+        } else {
             this.rowMap.forEach((row: SelectViewItem) => {
-                this.selectedRows.set(row.id,row.id);
+                this.selectedRows.set(row.id, row.id);
             });
         }
         this.pushSelectedToState();
-        this.doOutcome("OnSelect");
+        this.doOutcome('OnSelect');
         this.forceUpdate();
     }
     //////////////////////////////////////////////////////////////
     // Constructs a react component tree from the TreeViewItem map
     //////////////////////////////////////////////////////////////
-    buildTableHeaders() : Array<any>{
-        const elements: Array<any> = [];
-        
-        if(this.model.multiSelect === true) {
+    buildTableHeaders(): any[] {
+        const elements: any[] = [];
+
+        if (this.model.multiSelect === true) {
             elements.push(
-                <th 
-                    className = "select-view-table-check-header"
+                <th
+                    className="select-view-table-check-header"
                 >
                     <input
-                        className="select-view-check-box" 
+                        className="select-view-check-box"
                         type="checkbox"
                         onClick={this.toggleAllSelected}
-                    /> 
-                </th>
-            )
-        }
-
-        if(this.getAttribute("ButtonPositionRight","false").toLowerCase() !== "true"){
-            elements.push(
-                <th 
-                    className = "select-view-table-header"
-                />
+                    />
+                </th>,
             );
         }
 
-        if(this.colMap) {
+        if (this.getAttribute('ButtonPositionRight', 'false').toLowerCase() !== 'true') {
+            elements.push(
+                <th
+                    className="select-view-table-header"
+                />,
+            );
+        }
+
+        if (this.colMap) {
             this.colMap.forEach((col: FlowDisplayColumn) => {
-                if(col.visible === true){
+                if (col.visible === true) {
                     elements.push(
-                        <SelectViewHeader 
+                        <SelectViewHeader
                             key={col.developerName}
                             root={this}
                             colId={col.developerName}
-                            ref={(element: SelectViewHeader) => {this.setCol(col.developerName ,element)}}
-                        />
+                            ref={(element: SelectViewHeader) => {this.setCol(col.developerName , element); }}
+                        />,
                     );
                 }
             });
         }
 
-        if(this.getAttribute("ButtonPositionRight","false").toLowerCase() === "true"){
+        if (this.getAttribute('ButtonPositionRight', 'false').toLowerCase() === 'true') {
             elements.push(
-                <th 
-                    className = "select-view-table-header"
-                />
+                <th
+                    className="select-view-table-header"
+                />,
             );
         }
-        
+
         return elements;
     }
 
-    buildTable() : Array<any>{
-        const elements: Array<any> = [];
-        if(this.rowMap) {
+    buildTable(): any[] {
+        const elements: any[] = [];
+        if (this.rowMap) {
             this.rowMap.forEach((node: SelectViewItem) => {
                 elements.push(
-                    <SelectViewRow 
+                    <SelectViewRow
                         key={node.id}
                         root={this}
                         rowId={node.id}
-                        ref={(element: SelectViewRow) => {this.setRow(node.id ,element)}}
-                    />
+                        ref={(element: SelectViewRow) => {this.setRow(node.id , element); }}
+                    />,
                 );
             });
         }
-        
+
         return elements;
     }
 
     filterTable() {
-        let criteria: string = this.searchBox?.value;
+        const criteria: string = this.searchBox?.value;
         this.matchingRows.clear();
-        if(criteria?.length > 0) {
-            //traverse all nodes
+        if (criteria?.length > 0) {
+            // traverse all nodes
             this.rowMap.forEach((item: SelectViewItem) => {
                 item.columns.forEach((col: SelectViewColumn) => {
-                    if(col.value?.toString().toLowerCase()?.indexOf(criteria.toLowerCase()) >= 0 && this.matchingRows.size < 50) {
-                        this.matchingRows.set(item.id,item.id);
+                    if (col.value?.toString().toLowerCase()?.indexOf(criteria.toLowerCase()) >= 0 && this.matchingRows.size < 50) {
+                        this.matchingRows.set(item.id, item.id);
                     }
                 });
             });
         }
-        switch(true) {
+        switch (true) {
 
             // over abs max.  truncate and warn
             case this.matchingRows.size === 0:
-                this.messageBox.showMessageBox("No Results",
-                    (<span>{"The search returned no matches, please refine your search and try again."}</span>),
-                    [new modalDialogButton("Ok",this.messageBox.hideMessageBox)]
+                this.messageBox.showMessageBox('No Results',
+                    (<span>{'The search returned no matches, please refine your search and try again.'}</span>),
+                    [new modalDialogButton('Ok', this.messageBox.hideMessageBox)],
                 );
-                this.searchBox.value = "";
+                this.searchBox.value = '';
                 break;
             default:
-                //do nothing
+                // do nothing
                 break;
         }
         this.forceUpdate();
     }
 
     filterTableClear() {
-        this.searchBox.value = "";
+        this.searchBox.value = '';
         this.filterTable();
     }
 
     showContextMenu(e: any) {
         e.preventDefault();
         e.stopPropagation();
-        let listItems: Map<string , any> = new Map();
-        if(this.contextMenu) {
+        const listItems: Map<string , any> = new Map();
+        if (this.contextMenu) {
             Object.keys(this.outcomes).forEach((key: string) => {
                 const outcome: FlowOutcome = this.outcomes[key];
-                if (outcome.isBulkAction === true && outcome.developerName !== "OnSelect" && outcome.developerName.toLowerCase().startsWith("cm")) {
-                    listItems.set(outcome.developerName,(
-                        <li 
+                if (outcome.isBulkAction === true && outcome.developerName !== 'OnSelect' && outcome.developerName.toLowerCase().startsWith('cm')) {
+                    listItems.set(outcome.developerName, (
+                        <li
                             className="cm-item"
                             title={outcome.label || key}
-                            onClick={(e: any) => {e.stopPropagation(); this.doOutcome(key, undefined)}}
+                            onClick={(e: any) => {e.stopPropagation(); this.doOutcome(key, undefined); }}
                         >
                             <span
-                                className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " cm-item-icon"} />
+                                className={'glyphicon glyphicon-' + (outcome.attributes['icon']?.value || 'plus') + ' cm-item-icon'} />
                             <span
-                                className={"cm-item-label"}
+                                className={'cm-item-label'}
                             >
                                 {outcome.label || key}
                             </span>
@@ -437,7 +422,7 @@ export default class SelectView extends FlowComponent {
                     ));
                 }
             });
-            this.contextMenu.showContextMenu(e.clientX, e.clientY,listItems);   
+            this.contextMenu.showContextMenu(e.clientX, e.clientY, listItems);
             this.forceUpdate();
         }
     }
@@ -445,38 +430,34 @@ export default class SelectView extends FlowComponent {
     async hideContextMenu() {
         this.contextMenu.hideContextMenu();
     }
-    
-
-    
 
     render() {
-        
-        if(this.loadingState !== eLoadingState.ready) {
+
+        if (this.loadingState !== eLoadingState.ready) {
             return this.lastContent;
         }
-        
-        //construct table REACT elements
+
+        // construct table REACT elements
         this.colElements = this.buildTableHeaders();
         this.rowElements = this.buildTable();
-        
 
-        //handle classes attribute and hidden and size
-        let classes: string = "treeview " + this.getAttribute("classes","");
-        let style: CSSProperties = {};
-        if(this.model.visible === false) {
-            style.display = "none";
+        // handle classes attribute and hidden and size
+        const classes: string = 'treeview ' + this.getAttribute('classes', '');
+        const style: CSSProperties = {};
+        if (this.model.visible === false) {
+            style.display = 'none';
         }
-        if(this.model.width) {
-            style.width=this.model.width + "px"
+        if (this.model.width) {
+            style.width = this.model.width + 'px';
         }
-        if(this.model.height) {
-            style.height=this.model.height + "px"
+        if (this.model.height) {
+            style.height = this.model.height + 'px';
         }
-        
-        let headerButtons: Array<any> = this.buildHeaderButtons();
-      
-        let title:  string = this.model.label || "";
-        
+
+        const headerButtons: any[] = this.buildHeaderButtons();
+
+        const title: string = this.model.label || '';
+
         this.lastContent = (
             <div
                 className={classes}
@@ -485,15 +466,15 @@ export default class SelectView extends FlowComponent {
             >
                 <FlowMessageBox
                     parent={this}
-                    ref={(element: FlowMessageBox) => {this.messageBox = element}}
+                    ref={(element: FlowMessageBox) => {this.messageBox = element; }}
                 />
                 <FlowDialogBox
                     parent={this}
-                    ref={(element: FlowDialogBox) => {this.dialogBox = element}}
+                    ref={(element: FlowDialogBox) => {this.dialogBox = element; }}
                 />
                 <FlowContextMenu
                     parent={this}
-                    ref={(element: FlowContextMenu) => {this.contextMenu = element}}
+                    ref={(element: FlowContextMenu) => {this.contextMenu = element; }}
                 />
                 <div
                     className="select-view-header"
@@ -512,15 +493,14 @@ export default class SelectView extends FlowComponent {
                     >
                         <input
                             className="select-view-header-search-input"
-                            ref={(element: HTMLInputElement) => {this.setSearchBox(element)}}
-                        >
-                        </input>
-                        <span 
-                            className={"glyphicon glyphicon-search select-view-header-search-button"}
+                            ref={(element: HTMLInputElement) => {this.setSearchBox(element); }}
+                        />
+                        <span
+                            className={'glyphicon glyphicon-search select-view-header-search-button'}
                             onClick={this.filterTable}
                         />
-                        <span 
-                            className={"glyphicon glyphicon-remove select-view-header-search-button"}
+                        <span
+                            className={'glyphicon glyphicon-remove select-view-header-search-button'}
                             onClick={this.filterTableClear}
                         />
 
@@ -548,9 +528,9 @@ export default class SelectView extends FlowComponent {
                             {this.rowElements}
                         </tbody>
                     </table>
-                    
+
                 </div>
-                
+
             </div>
         );
         return this.lastContent;
@@ -560,8 +540,8 @@ export default class SelectView extends FlowComponent {
                     >
                         {this.colElements}
                     </div>
-                    <div 
-                        className="table-view-scroller" 
+                    <div
+                        className="table-view-scroller"
                     >
                         <div
                             className="table-view-scroller-body"

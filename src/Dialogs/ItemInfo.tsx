@@ -3,24 +3,21 @@ import * as React from 'react';
 import TreeViewItem from '../TreeView/TreeViewItem';
 
 export default class ItemInfo extends React.Component<any, any> {
-        
+
     item: TreeViewItem;
-    
 
     constructor(props: any) {
         super(props);
         this.item = this.props.item;
     }
 
-    
-
     render() {
 
         const rows: any = [];
-        
+
         const displayColumns: FlowDisplayColumn[] = this.props.display;
 
-        if(displayColumns){
+        if (displayColumns) {
             displayColumns.forEach((column: FlowDisplayColumn) => {
                 rows.push(
                     <div
@@ -28,15 +25,14 @@ export default class ItemInfo extends React.Component<any, any> {
                 >
                     <span className="modal-dialog-input-label">{column.label || column.developerName}</span>
                     <span className="modal-dialog-input-label">{this.item.itemName}</span>
-                </div>  
+                </div>,
                 );
             });
         }
- 
 
         return (
             <div
-                style={{padding: "5px"}}
+                style={{padding: '5px'}}
             >
                 <div
                     className="modal-dialog-input-row"

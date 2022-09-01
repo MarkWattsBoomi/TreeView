@@ -1,15 +1,14 @@
-import React, { CSSProperties } from "react";
-import { SelectViewColumn, SelectViewItem } from "./SelectViewItem";
-import SelectView from "./SelectView";
-import { FlowDisplayColumn, FlowOutcome} from "flow-component-model";
+import { FlowDisplayColumn, FlowOutcome} from 'flow-component-model';
+import React, { CSSProperties } from 'react';
+import SelectView from './SelectView';
+import { SelectViewColumn, SelectViewItem } from './SelectViewItem';
 
-export default class SelectViewRow extends React.Component<any,any> {
-    
+export default class SelectViewRow extends React.Component<any, any> {
 
     constructor(props: any) {
         super(props);
-        //this.showMessageBox = this.showMessageBox.bind(this);
-        //this.hideMessageBox = this.hideMessageBox.bind(this);
+        // this.showMessageBox = this.showMessageBox.bind(this);
+        // this.hideMessageBox = this.hideMessageBox.bind(this);
         this.selected = this.selected.bind(this);
     }
 
@@ -22,76 +21,73 @@ export default class SelectViewRow extends React.Component<any,any> {
     render() {
         const root: SelectView = this.props.root;
         const row: SelectViewItem = root.rowMap.get(this.props.rowId);
-        
 
-        let content: any = [];
-        let buttons: any = [];
+        const content: any = [];
+        const buttons: any = [];
 
-        let selectedClass: string = "";
-        if(root.selectedRows.has(row.id)) {
-            selectedClass = " select-view-row-selected";
+        let selectedClass: string = '';
+        if (root.selectedRows.has(row.id)) {
+            selectedClass = ' select-view-row-selected';
         }
-        if(root.modifiedRows.has(row.id)) {
-            selectedClass = " select-view-row-modified";
+        if (root.modifiedRows.has(row.id)) {
+            selectedClass = ' select-view-row-modified';
         }
 
-        let style: CSSProperties = {};
-        //if there's a filter list then hide me if not in it or not in expand list
-        if(root.matchingRows.size > 0) {
-            if(root.matchingRows.has(row.id) || root.selectedRows.has(row.id)) {
-                
-            }
-            else {
-                style.display="none";
+        const style: CSSProperties = {};
+        // if there's a filter list then hide me if not in it or not in expand list
+        if (root.matchingRows.size > 0) {
+            if (root.matchingRows.has(row.id) || root.selectedRows.has(row.id)) {
+
+            } else {
+                style.display = 'none';
 
             }
-        }
-        else{
-            style.visibility="visible";
+        } else {
+            style.visibility = 'visible';
         }
 
         Object.keys(root.outcomes).forEach((key: string) => {
             const outcome: FlowOutcome = root.outcomes[key];
-            if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect" && !outcome.developerName.toLowerCase().startsWith("cm")) {
+            if (outcome.isBulkAction === false && outcome.developerName !== 'OnSelect' && !outcome.developerName.toLowerCase().startsWith('cm')) {
                 buttons.push(
-                    <span 
+                    <span
                         key={key}
-                        className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " select-view-body-column-button"} 
+                        className={'glyphicon glyphicon-' + (outcome.attributes['icon']?.value || 'plus') + ' select-view-body-column-button'}
                         title={outcome.label || key}
-                        onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, row.id)}}
-                    />
+                        onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, row.id); }}
+                    />,
                 );
             }
         });
 
-        if(root.model.multiSelect === true) {
+        if (root.model.multiSelect === true) {
             content.push(
-                <td 
-                    className = "select-view-table-body-check-column"
+                <td
+                    className="select-view-table-body-check-column"
                 >
                     <input
-                        className="select-view-check-box" 
+                        className="select-view-check-box"
                         type="checkbox"
                         checked={root.selectedRows.has(row.id)}
                         onClick={this.selected}
-                    /> 
-                </td>
+                    />
+                </td>,
             );
         }
 
-        if(root.getAttribute("ButtonPositionRight","false").toLowerCase() !== "true"){
+        if (root.getAttribute('ButtonPositionRight', 'false').toLowerCase() !== 'true') {
             content.push(
                 <td
-                    className = "select-view-table-buttons-body"
+                    className="select-view-table-buttons-body"
                 >
                     {buttons}
-                </td>
+                </td>,
             );
         }
 
         row.columns.forEach((col: SelectViewColumn) => {
             const colDef: FlowDisplayColumn = root.colMap.get(col.name);
-            if(colDef.visible === true){
+            if (colDef.visible === true) {
                 content.push(
                     <td
                         className="select-view-table-body-column"
@@ -101,24 +97,24 @@ export default class SelectViewRow extends React.Component<any,any> {
                         >
                             {col.value}
                         </label>
-                    </td>
+                    </td>,
                 );
             }
         });
 
-        if(root.getAttribute("ButtonPositionRight","false").toLowerCase() === "true"){
+        if (root.getAttribute('ButtonPositionRight', 'false').toLowerCase() === 'true') {
             content.push(
                 <td
-                    className = "select-view-table-buttons-body"
+                    className="select-view-table-buttons-body"
                 >
                     {buttons}
-                </td>
+                </td>,
             );
         }
-        
+
         return (
             <tr
-                className={"select-view-table-row" + selectedClass}
+                className={'select-view-table-row' + selectedClass}
                 onClick={this.selected}
                 style={style}
             >

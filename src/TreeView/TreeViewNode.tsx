@@ -12,58 +12,56 @@ export default class TreeViewNode extends React.Component<any, any> {
     messageBox: FlowMessageBox;
 
     expanded: boolean = false;
-    
+
     constructor(props: any) {
         super(props);
         this.showContextMenu = this.showContextMenu.bind(this);
-        this.hideContextMenu = this.hideContextMenu.bind(this);   
+        this.hideContextMenu = this.hideContextMenu.bind(this);
         this.showInfo = this.showInfo.bind(this);
         this.onSelect = this.onSelect.bind(this);
         this.expanded = this.props.expanded || false;
     }
 
     componentDidUpdate() {
-        
+
     }
 
     componentDidMount() {
         const root: TreeView = this.props.root;
-        if(root.expansionPath.indexOf(this.props.nodeId) >= 0)
-        {
+        if (root.expansionPath.indexOf(this.props.nodeId) >= 0) {
             this.expanded = true;
             this.forceUpdate();
         }
     }
-    
-    
+
     showContextMenu(e: any) {
         e.preventDefault();
         e.stopPropagation();
         const root: TreeView = this.props.root;
-        const node: TreeViewItem = root.flatTree.get(this.props.nodeId); 
+        const node: TreeViewItem = root.flatTree.get(this.props.nodeId);
 
-        let lowestLevel: boolean = node.children.size===0;
+        const lowestLevel: boolean = node.children.size === 0;
 
-        let listItems: Map<string , any> = new Map();
-        if(this.contextMenu && node.isEnabled()) {
+        const listItems: Map<string , any> = new Map();
+        if (this.contextMenu && node.isEnabled()) {
             Object.keys(root.outcomes).forEach((key: string) => {
                 const outcome: FlowOutcome = root.outcomes[key];
-                if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect" && outcome.developerName.toLowerCase().startsWith("cm")) {
+                if (outcome.isBulkAction === false && outcome.developerName !== 'OnSelect' && outcome.developerName.toLowerCase().startsWith('cm')) {
                     let showOutcome: boolean = true;
-                    if(outcome.attributes["LowestOnly"]?.value.toLowerCase() === "true" && !lowestLevel){
-                        showOutcome=false;
+                    if (outcome.attributes['LowestOnly']?.value.toLowerCase() === 'true' && !lowestLevel) {
+                        showOutcome = false;
                     }
-                    if(showOutcome){
-                        listItems.set(outcome.developerName,(
-                            <li 
+                    if (showOutcome) {
+                        listItems.set(outcome.developerName, (
+                            <li
                                 className="cm-item"
                                 title={outcome.label || key}
-                                onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node)}}
+                                onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node); }}
                             >
                                 <span
-                                    className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " cm-item-icon"} />
+                                    className={'glyphicon glyphicon-' + (outcome.attributes['icon']?.value || 'plus') + ' cm-item-icon'} />
                                 <span
-                                    className={"cm-item-label"}
+                                    className={'cm-item-label'}
                                 >
                                     {outcome.label || key}
                                 </span>
@@ -72,7 +70,7 @@ export default class TreeViewNode extends React.Component<any, any> {
                     }
                 }
             });
-            this.contextMenu.showContextMenu(e.clientX, e.clientY,listItems);   
+            this.contextMenu.showContextMenu(e.clientX, e.clientY, listItems);
             this.forceUpdate();
         }
     }
@@ -83,20 +81,20 @@ export default class TreeViewNode extends React.Component<any, any> {
 
     showInfo() {
         const root: TreeView = this.props.root;
-        const node: TreeViewItem = root.flatTree.get(this.props.nodeId); 
-        let content: any = (
+        const node: TreeViewItem = root.flatTree.get(this.props.nodeId);
+        const content: any = (
             <ItemInfo
                 item={node}
                 display={root.model.displayColumns}
             />
         );
-        this.messageBox.showMessageBox(node.itemName,content,[new modalDialogButton("Close",this.messageBox.hideMessageBox)])
+        this.messageBox.showMessageBox(node.itemName, content, [new modalDialogButton('Close', this.messageBox.hideMessageBox)]);
     }
 
     onSelect(e: any) {
         const root: TreeView = this.props.root;
-        const node: TreeViewItem = root.flatTree.get(this.props.nodeId); 
-        root.doOutcome("OnSelect",node);
+        const node: TreeViewItem = root.flatTree.get(this.props.nodeId);
+        root.doOutcome('OnSelect', node);
     }
 
     render() {
@@ -104,105 +102,101 @@ export default class TreeViewNode extends React.Component<any, any> {
         let content: any;
         let icon: any;
 
-        let buttons: Array<any> = [];
+        const buttons: any[] = [];
         const root: TreeView = this.props.root;
-        const node: TreeViewItem = root.flatTree.get(this.props.nodeId); 
-        //const parentItem: TreeViewItem = root.findTreeNode(root.nodeTree,this.props.parentId); 
-        //const parent = root.getNode(this.props.parentId);
-        //set the queue icon
-        icon=node.itemIcon || "envelope";
-        
-        if((this.props.children && (this.props.children as Array<any>).length > 0) || this.props.expanded===true)
-        {
-            let expanderIcon: string="plus";
-            if(this.expanded === true || root.expansionPath.indexOf(this.props.nodeId) >= 0 || root.filterExpansionPath.indexOf(this.props.nodeId) >= 0)
-            {
-                expanderIcon="minus";
+        const node: TreeViewItem = root.flatTree.get(this.props.nodeId);
+        // const parentItem: TreeViewItem = root.findTreeNode(root.nodeTree,this.props.parentId);
+        // const parent = root.getNode(this.props.parentId);
+        // set the queue icon
+        icon = node.itemIcon || 'envelope';
+
+        if ((this.props.children && (this.props.children as any[]).length > 0) || this.props.expanded === true) {
+            let expanderIcon: string = 'plus';
+            if (this.expanded === true || root.expansionPath.indexOf(this.props.nodeId) >= 0 || root.filterExpansionPath.indexOf(this.props.nodeId) >= 0) {
+                expanderIcon = 'minus';
                 content = this.props.children;
             }
             expander = (
-                <span 
-                    className={"glyphicon glyphicon-" + expanderIcon + " treeview-node-expander-icon"}
-                    onClick={(e: any) => {this.toggleExpand(e)}}    
+                <span
+                    className={'glyphicon glyphicon-' + expanderIcon + ' treeview-node-expander-icon'}
+                    onClick={(e: any) => {this.toggleExpand(e); }}
                 />
             );
-            
+
         }
 
-        let selectedClass: string = "";
-        if(node.itemId === (root.selectedNodeId ? root.selectedNodeId : undefined)) {
-            selectedClass = " treeview-node-item-selected";
+        let selectedClass: string = '';
+        if (node.itemId === (root.selectedNodeId ? root.selectedNodeId : undefined)) {
+            selectedClass = ' treeview-node-item-selected';
         }
 
-        let lowestLevel: boolean = node.children.size===0;
+        const lowestLevel: boolean = node.children.size === 0;
 
-        if(node.isEnabled()) {
+        if (node.isEnabled()) {
             Object.keys(root.outcomes).forEach((key: string) => {
                 const outcome: FlowOutcome = root.outcomes[key];
-                if (outcome.isBulkAction === false && outcome.developerName !== "OnSelect" && !outcome.developerName.toLowerCase().startsWith("cm")) {
+                if (outcome.isBulkAction === false && outcome.developerName !== 'OnSelect' && !outcome.developerName.toLowerCase().startsWith('cm')) {
                     let showOutcome: boolean = true;
-                    if(outcome.attributes["LowestOnly"]?.value.toLowerCase() === "true" && !lowestLevel){
-                        showOutcome=false;
+                    if (outcome.attributes['LowestOnly']?.value.toLowerCase() === 'true' && !lowestLevel) {
+                        showOutcome = false;
                     }
-                    if(showOutcome){
+                    if (showOutcome) {
                         buttons.push(
-                            <span 
+                            <span
                                 key={key}
-                                className={"glyphicon glyphicon-" + (outcome.attributes["icon"]?.value || "plus") + " treeview-node-button"} 
+                                className={'glyphicon glyphicon-' + (outcome.attributes['icon']?.value || 'plus') + ' treeview-node-button'}
                                 title={outcome.label || key}
-                                onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node)}}
-                            />
+                                onClick={(e: any) => {e.stopPropagation(); root.doOutcome(key, node); }}
+                            />,
                         );
                     }
                 }
             });
-        }    
-
-        let label: string = node.itemName;
-        if(root.debugLevel >= eDebugLevel.info) {
-            label += " (" + node.itemId + ") (" + node.parentId + ")"
         }
 
-        let style: CSSProperties = {};
-        style.paddingLeft="10px";
+        let label: string = node.itemName;
+        if (root.debugLevel >= eDebugLevel.info) {
+            label += ' (' + node.itemId + ') (' + node.parentId + ')';
+        }
 
-        //if there's a filter list then hide me if not in it or not in expand list
-        if(root.matchingNodes) {
-            if(root.matchingNodes.indexOf(node.itemId)>=0 || root.filterExpansionPath.indexOf(node.itemId)>=0 || root.expansionPath.indexOf(node.itemId)>=0 || root.selectedNodeId===node.itemId) {
-                style.visibility="visible";
-            }
-            else {
-                style.visibility="hidden";
-                style.height="0px";
+        const style: CSSProperties = {};
+        style.paddingLeft = '10px';
+
+        // if there's a filter list then hide me if not in it or not in expand list
+        if (root.matchingNodes) {
+            if (root.matchingNodes.indexOf(node.itemId) >= 0 || root.filterExpansionPath.indexOf(node.itemId) >= 0 || root.expansionPath.indexOf(node.itemId) >= 0 || root.selectedNodeId === node.itemId) {
+                style.visibility = 'visible';
+            } else {
+                style.visibility = 'hidden';
+                style.height = '0px';
             }
         }
 
         let nodeIcon: any;
-        if(root.getAttribute("ShowInfo","false").toLowerCase() === "true") {
+        if (root.getAttribute('ShowInfo', 'false').toLowerCase() === 'true') {
             nodeIcon = (
-                <span 
-                    className={"glyphicon glyphicon-info-sign treeview-node-button"}
-                    onClick={(e: any) => {e.stopPropagation(); this.showInfo(); root.doOutcome("OnInfo", node)}}
+                <span
+                    className={'glyphicon glyphicon-info-sign treeview-node-button'}
+                    onClick={(e: any) => {e.stopPropagation(); this.showInfo(); root.doOutcome('OnInfo', node); }}
+                />
+            );
+        } else {
+            nodeIcon = (
+                <span
+                    className={'glyphicon glyphicon-' + icon + ' treeview-node-icon'}
                 />
             );
         }
-        else {
-            nodeIcon = (
-                <span 
-                    className={"glyphicon glyphicon-" + icon + " treeview-node-icon"}
-                />
-            );
-        }
-        
-        return( 
+
+        return(
             <div
-                className={"treeview-node "}
+                className={'treeview-node '}
                 style={style}
                 title={node.itemDescription}
-                onContextMenu={(e: any) => {e.preventDefault()}}
+                onContextMenu={(e: any) => {e.preventDefault(); }}
             >
-                <div 
-                    className = "treeview-node-title"
+                <div
+                    className="treeview-node-title"
                 >
                     <div
                         className="treeview-node-expander"
@@ -210,11 +204,11 @@ export default class TreeViewNode extends React.Component<any, any> {
                         {expander}
                     </div>
                     <div
-                        className={"treeview-node-item" + selectedClass + node.getStyle()}
+                        className={'treeview-node-item' + selectedClass + node.getStyle()}
                         onClick={this.onSelect}
                         title={node.itemDescription}
                         draggable={this.props.allowRearrange}
-                        onDragStart={(e) => {root.onDrag(e,node.itemId); }}
+                        onDragStart={(e) => {root.onDrag(e, node.itemId); }}
                         onDragEnter={(e) => {root.onDragEnter(e); }}
                         onDragLeave={(e) => {root.onDragLeave(e); }}
                         onDragOver={(e) => {root.onDragOver(e); }}
@@ -224,11 +218,11 @@ export default class TreeViewNode extends React.Component<any, any> {
                     >
                         <FlowMessageBox
                             parent={this}
-                            ref={(element: FlowMessageBox) => {this.messageBox = element}}
+                            ref={(element: FlowMessageBox) => {this.messageBox = element; }}
                         />
                         <FlowContextMenu
                             parent={this}
-                            ref={(element: FlowContextMenu) => {this.contextMenu = element}}
+                            ref={(element: FlowContextMenu) => {this.contextMenu = element; }}
                         />
                         <div
                             className="treeview-node-icons"
@@ -236,7 +230,7 @@ export default class TreeViewNode extends React.Component<any, any> {
                             {nodeIcon}
                         </div>
                         <div
-                            className = "treeview-node-label"
+                            className="treeview-node-label"
                         >
                             {label}
                         </div>
@@ -247,8 +241,8 @@ export default class TreeViewNode extends React.Component<any, any> {
                         </div>
                     </div>
                 </div>
-                <div 
-                    className = "treeview-node-body"
+                <div
+                    className="treeview-node-body"
                 >
                     {content}
                 </div>
