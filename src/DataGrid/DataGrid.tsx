@@ -474,10 +474,31 @@ export default class DataGrid extends FlowComponent {
                 />,
             );
         } else {
+            // RUAIRI - this is the no rows message
+            const noRows: string = this.getAttribute('NoRowsMessage', 'No Entries Found');
+            let msg: any;
+            if (noRows.startsWith('http')) {
+                // its a uri - image
+                msg = (
+                    <img
+                        src={noRows}
+                        className="data-grid-table-no-rows-image"
+                    />
+                );
+            } else {
+                msg = noRows;
+            }
             elements.push(
                 <tr
                     style={{height: 'calc(100% + 1px)'}}
-                />,
+                >
+                    <td
+                        colSpan={100}
+                        className="data-grid-table-no-rows"
+                    >
+                        {msg}
+                    </td>
+                </tr>,
             );
         }
 
