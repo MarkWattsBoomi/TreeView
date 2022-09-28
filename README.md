@@ -259,9 +259,57 @@ Note: if a table is editable but the "OnChange" outcome is not attached then the
 
 ## Outcome Attributes
 
+### display
+
+Tells the table how to display the buttons.
+
+Valid options are "text" or "iconandtext" or "icon".
+
+Default is text only.
+
 ### icon
 
 Sets the glyphicon to show for the outcome.
+
+### rule
+Row level outcomes allow for adding rules which will control if the outcome should be displayed for the current row.
+Top Level Outcomes allow for adding rules based of other non-row data.
+
+The attribute value string should be in JSON format like this: -
+'''
+{
+   "field":"fieldDeveloperName",
+   "comparator":"enumeratedComparator",
+   "value":"valueToTest"
+}
+'''
+
+In the case of row level outcomes, the "field" is set to the developerName of the column to test.
+
+The "field" specifies either the name of a row's column (only in the case of row level outcomes) or the name of a flow field or one of its attributes to test.
+The "value" specifies either a fixed value or the name of a flow field or one of its attributes to compare to.
+
+In the case either the field or value is a flow field then put the field name and optionally attribute name in curly brace notation: -
+{{FlowFieldName}} or {{FlowFieldName->PropertyName}}
+
+The "comparator" must be one of the following: - 
+
+* "equals"          Value must match
+* "not equals"      Value must not match
+* "contains"        Value must contain
+* "not contains"    Value must not contain
+* "starts with"     Value must start with 
+* "ends with"       Value must end with
+* "in"              Value must appear in the comma/space separated opions
+* "not in"          Value must not appear in the comma/space separated opions
+* "lt"              Value must be less than - number columns only
+* "lte"             Value must be less than or equal to - number columns only
+* "gt"              Value must be greater than - number columns only
+* "gte"             Value must be greater than or equal to - number columns only
+
+The value should be a string, if "in" or "not in" then supply a list of values space, comma, semi-colon or pipe delimited,
+
+For boolean values just use "true" or "false".
 
 ## Settings
 
