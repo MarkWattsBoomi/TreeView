@@ -296,6 +296,10 @@ Setting this enables extra output in the console and on screen.  It's a number, 
 
 info / 2 for example will display the node's id & parent in the tree
 
+### NoRowsMessage
+
+The text or a uri to an image to display in the grid when there are no rows to display.
+
 
 ## Styling
 

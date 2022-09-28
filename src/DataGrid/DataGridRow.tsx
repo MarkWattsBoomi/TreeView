@@ -1,6 +1,6 @@
 import React, { CSSProperties } from 'react';
 
-import { eContentType, FlowDisplayColumn, FlowOutcome, modalDialogButton } from 'flow-component-model';
+import { eContentType, FlowDisplayColumn, FlowField, FlowObjectData, FlowOutcome, modalDialogButton } from 'flow-component-model';
 import DataGrid from './DataGrid';
 import { DataGridColumn, DataGridItem } from './DataGridItem';
 
@@ -96,17 +96,44 @@ export default class DataGridRow extends React.Component<any, any> {
         Object.keys(root.outcomes).forEach((key: string) => {
             const outcome: FlowOutcome = root.outcomes[key];
             if (outcome.isBulkAction === false && outcome.developerName !== 'OnSelect' && outcome.developerName !== 'OnChange' && !outcome.developerName.toLowerCase().startsWith('cm')) {
-                buttons.push(
-                    <span
-                        key={key}
-                        className={'glyphicon glyphicon-' + (outcome.attributes['icon']?.value || 'plus') + ' data-grid-column-button'}
-                        title={outcome.label || key}
-                        onClick={(e: any) => {
-                            e.stopPropagation();
-                            root.doOutcome(key, row.id);
-                        }}
-                    />,
-                );
+                let icon: any;
+                let label: any;
+                let showOutcome: boolean = this.assessRowOutcomeRule(outcome, row, root);
+
+                if ((!outcome.attributes['display']) || outcome.attributes['display'].value.indexOf('text') >= 0) {
+                    label = (
+                        <span
+                            className="data-grid-column-button-label"
+                        >
+                            {root.outcomes[key].label}
+                        </span>
+                    );
+                }
+                if ((outcome.attributes['display']) && outcome.attributes['display'].value.indexOf('icon') >= 0) {
+                    if (outcome.attributes['icon'].value.toLowerCase() === 'null') {
+                        showOutcome = false;
+                    }
+                    icon = (
+                        <span
+                            className={'glyphicon glyphicon-' + (outcome.attributes['icon']?.value || 'plus') + ' data-grid-column-button-icon'}
+                        />
+                    );
+                }
+                if (showOutcome === true) {
+                    buttons.push(
+                        <div
+                            key={key}
+                            className={'data-grid-column-button'}
+                            title={outcome.label || key}
+                            onClick={(event: any) => {
+                                root.doOutcome(key, row.id);
+                            }}
+                        >
+                            {icon}
+                            {label}
+                        </div>,
+                    );
+                }
             }
         });
 
@@ -206,5 +233,184 @@ export default class DataGridRow extends React.Component<any, any> {
                 {content}
             </tr>
         );
+    }
+
+    // assesses any rule on the outcome.
+    // It grabs the values for the criteria and comparator and then decides if it meets the criteria.
+    assessRowOutcomeRule(outcome: FlowOutcome, row: DataGridItem, root: DataGrid): boolean {
+        let result: boolean = true;
+        if (!outcome) {
+            return false;
+        }
+        if (outcome.attributes.rule && outcome.attributes.rule.value.length > 0) {
+            try {
+                const rule = JSON.parse(outcome.attributes.rule.value);
+
+                let contentType: eContentType;
+                let match: any;
+                let fld: string = rule.field;
+                let fld2: string = rule.value;
+                let value: any = fld;
+                let compareTo: any = fld2;
+                while (match = RegExp(/{{([^}]*)}}/).exec(fld)) {
+                    // is it a known static
+                    switch (match[1]) {
+                        case 'TENANT_ID':
+                            contentType = eContentType.ContentString;
+                            value = 'MyTenentId';
+                            break;
+
+                        default:
+                            const fldElements: string[] = match[1].split('->');
+                            // element[0] is the flow field name
+                            let val: FlowField;
+                            val = root.fields[fldElements[0]];
+
+                            if (val) {
+                                let od: FlowObjectData = val.value as FlowObjectData;
+                                if (od) {
+                                    if (fldElements.length > 1) {
+                                        for (let epos = 1 ; epos < fldElements.length ; epos ++) {
+                                            contentType = (od as FlowObjectData).properties[fldElements[epos]]?.contentType;
+                                            od = (od as FlowObjectData).properties[fldElements[epos]].value as FlowObjectData;
+                                        }
+                                        value = od;
+                                    } else {
+                                        value = val.value;
+                                        contentType = val.contentType;
+                                    }
+                                } else {
+                                    value = val.value;
+                                    contentType = val.contentType;
+                                }
+                            }
+                            break;
+                    }
+                    fld = fld.replace(match[0], value);
+                }
+
+                while (match = RegExp(/{{([^}]*)}}/).exec(fld2)) {
+                    // is it a known static
+                    switch (match[1]) {
+                        case 'TENANT_ID':
+                            contentType = eContentType.ContentString;
+                            value = 'MyTenentId';
+                            break;
+
+                        default:
+                            const fldElements: string[] = match[1].split('->');
+                            // element[0] is the flow field name
+                            let val: FlowField;
+                            val = root.fields[fldElements[0]];
+
+                            if (val) {
+                                let od: FlowObjectData = val.value as FlowObjectData;
+                                if (od) {
+                                    if (fldElements.length > 1) {
+                                        for (let epos = 1 ; epos < fldElements.length ; epos ++) {
+                                            contentType = (od as FlowObjectData).properties[fldElements[epos]]?.contentType;
+                                            od = (od as FlowObjectData).properties[fldElements[epos]].value as FlowObjectData;
+                                        }
+                                        compareTo = od;
+                                    } else {
+                                        compareTo = val.value;
+                                        contentType = val.contentType;
+                                    }
+                                } else {
+                                    compareTo = val.value;
+                                    contentType = val.contentType;
+                                }
+                            }
+                            break;
+                    }
+                    fld2 = fld2.replace(match[0], value);
+                }
+
+                if (row.columns.has(fld)) {
+                    const property: DataGridColumn = row.columns.get(fld);
+                    result = this.assessRule(property.value, rule.comparator, compareTo, property.type);
+                } else {
+                    result = this.assessRule(value, rule.comparator, compareTo, contentType);
+                }
+
+            } catch (e) {
+                console.log('The rule on row level outcome ' + outcome.developerName + ' is invalid');
+            }
+        }
+        return result;
+    }
+
+    // the core rule assessor, compares field to value with the comparator
+    assessRule(value: any, comparator: string, compareTo: string, fieldType: eContentType): boolean {
+        let comparee: any;
+        let comparer: any;
+        let result: boolean = true;
+        switch (fieldType) {
+            case eContentType.ContentNumber:
+                comparee = parseInt(compareTo);
+                comparer = value;
+                break;
+            case eContentType.ContentDateTime:
+                comparee = new Date(compareTo);
+                comparer = value;
+                break;
+            case eContentType.ContentBoolean:
+                comparee = ('' + compareTo).toLowerCase() === 'true';
+                comparer = value;
+                break;
+            case eContentType.ContentString:
+            default:
+                comparee = compareTo.toLowerCase().split(',');
+                if (comparee.length > 0) {
+                    for (let pos = 0 ; pos < comparee.length ; pos++) {
+                        comparee[pos] = comparee[pos].trim();
+                    }
+                }
+                if (['in', 'not in'].indexOf(comparator.toLowerCase()) < 0) {
+                    comparee = comparee[0];
+                }
+                comparer = (value as string)?.toLowerCase();
+                break;
+        }
+
+        switch (comparator.toLowerCase()) {
+            case 'equals':
+                result = comparer === comparee;
+                break;
+            case 'not equals':
+                result = comparer !== comparee;
+                break;
+            case 'contains':
+                result = comparer.indexOf(comparee) >= 0;
+                break;
+            case 'not contains':
+                result = comparer.indexOf(comparee) < 0;
+                break;
+            case 'starts with':
+                result = ('' + comparer).startsWith(comparee);
+                break;
+            case 'ends with':
+                result = ('' + comparer).endsWith(comparee);
+                break;
+            case 'in':
+                result = comparee.indexOf(comparer) >= 0;
+                break;
+            case 'not in':
+                result = comparee.indexOf(comparer) < 0;
+                break;
+            case 'lt':
+                result = parseInt('' + comparer) < parseInt('' + comparee);
+                break;
+            case 'lte':
+                result = parseInt('' + comparer) <= parseInt('' + comparee);
+                break;
+            case 'gt':
+                result = parseInt('' + comparer) > parseInt('' + comparee);
+                break;
+            case 'gte':
+                result = parseInt('' + comparer) >= parseInt('' + comparee);
+                break;
+        }
+        return result;
     }
 }

@@ -79,6 +79,7 @@ export default class DataGrid extends FlowComponent {
         }
     }
 
+    /*
     async loadSupportingfields(): Promise<any> {
         const extrafields: string[] = [];
         Object.keys(this.outcomes).forEach((key: string) => {
@@ -91,6 +92,65 @@ export default class DataGrid extends FlowComponent {
         for (const ocn of extrafields) {
             await this.loadValue(ocn);
         }
+    }
+    */
+
+    // this is going to parse the rule attributes on all outcomes and find any flow value references.  It will then pre-load these values so
+    // they are reads for row level outcome rule evaluation.
+    async loadSupportingfields(): Promise<any> {
+        // preload any column rule values
+        const alreadyDone: string[] = [];
+        const outcomes: FlowOutcome[] = Array.from(Object.values(this.outcomes));
+        for (let pos = 1 ; pos < outcomes.length ; pos++) {
+            const outcome: FlowOutcome = outcomes[pos];
+            if (outcome.attributes.rule && outcome.attributes.rule.value.length > 0) {
+                try {
+                    const rule = JSON.parse(outcome.attributes.rule.value);
+                    // since this is a global then the value of the rule.field must be a flow field or the property of one
+                    // split the rule.field on the separator
+                    let match: any;
+                    let fld: string = rule.field;
+                    while (match = RegExp(/{{([^}]*)}}/).exec(fld)) {
+                        switch (match[1]) {
+                            case 'TENANT_ID':
+                                break;
+
+                            default:
+                                const fldElements: string[] = match[1].split('->');
+                                // element[0] is the flow field name
+                                let val: FlowField;
+                                if (alreadyDone.indexOf(fldElements[0]) < 0) {
+                                    val = await this.loadValue(fldElements[0]);
+                                    alreadyDone.push(fldElements[0]);
+                                }
+                                break;
+                        }
+                        fld = fld.replace(match[0], 'done');
+                    }
+                    fld = rule.value;
+                    while (match = RegExp(/{{([^}]*)}}/).exec(fld)) {
+                        switch (match[1]) {
+                            case 'TENANT_ID':
+                                break;
+
+                            default:
+                                const fldElements: string[] = match[1].split('->');
+                                // element[0] is the flow field name
+                                let val: FlowField;
+                                if (alreadyDone.indexOf(fldElements[0]) < 0) {
+                                    val = await this.loadValue(fldElements[0]);
+                                    alreadyDone.push(fldElements[0]);
+                                }
+                                break;
+                        }
+                        fld = fld.replace(match[0], 'done');
+                    }
+                } catch (e) {
+                    console.log('The rule on outcome ' + outcome.developerName + ' is invalid');
+                }
+            }
+        }
+        return true;
     }
 
     async componentDidMount() {
