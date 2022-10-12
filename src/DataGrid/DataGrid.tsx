@@ -322,6 +322,7 @@ export default class DataGrid extends FlowComponent {
         console.log('proj=' + this.rowMap.get(rowId).objectData.properties['project_number'].value + ' ,' + rowId + ',' + colName + ' = ' + oldVal + '=>' +  newVal);
 
         this.rowMap.get(rowId).objectData.properties[colName].value = newVal;
+        this.rowMap.get(rowId).columns.get(colName).value = newVal;
 
         await this.doOutcome('OnChange', rowId);
     }
@@ -498,6 +499,16 @@ export default class DataGrid extends FlowComponent {
                     );
                 }
             });
+        }
+
+        if (this.getAttribute('SummaryRows')) {
+            elements.push(
+                <th
+                    className="data-grid-table-header"
+                >
+                    Total
+                </th>,
+            );
         }
 
         if (this.getAttribute('ButtonPositionRight', 'false').toLowerCase() === 'true') {

@@ -12,6 +12,7 @@ export default class DataGridRow extends React.Component<any, any> {
         this.valueLeft = this.valueLeft.bind(this);
     }
 
+    // this handles a cell's onChange to sync the value into the underlying data set
     valueChanged(e: any, colName: string) {
         const root: DataGrid = this.props.root;
         const row: DataGridItem = root.rowMap.get(this.props.rowId);
@@ -37,6 +38,7 @@ export default class DataGridRow extends React.Component<any, any> {
         }
     }
 
+    // this handles a datagrid column's onBlur - we will update the core data if different
     valueLeft(e: any, colName: string) {
         const root: DataGrid = this.props.root;
         const row: DataGridItem = root.rowMap.get(this.props.rowId);
@@ -58,6 +60,7 @@ export default class DataGridRow extends React.Component<any, any> {
         }
 
         if (oldVal !== newVal) {
+            console.log('Updating col ' + colName + ' from ' + oldVal + ' to ' + newVal);
             root.rowValueComplete(this.props.rowId, colName, oldVal, newVal);
         }
     }
@@ -147,6 +150,12 @@ export default class DataGridRow extends React.Component<any, any> {
             );
         }
 
+        let total: number = 0;
+        let cols: string[];
+        if (root.getAttribute('SummaryRows')) {
+            cols = root.getAttribute('SummaryRows').split(',').map((col: string) => col.trim());
+        }
+
         let lastColDef: FlowDisplayColumn;
         let infoButton: any;
         row.columns.forEach((col: DataGridColumn) => {
@@ -162,9 +171,18 @@ export default class DataGridRow extends React.Component<any, any> {
                         </label>
                     );
                 } else {
+                    let type: string = 'text';
+                    switch (colDef.contentType) {
+                        case eContentType.ContentNumber:
+                            type = 'number';
+                            break;
+                        default:
+                            type = 'text';
+                            break;
+                    }
                     cell = (
                         <input
-                            type="text"
+                            type={type}
                             defaultValue={col.value}
                             className="data-grid-column-edit"
                             onBlur={(e: any) => {
@@ -179,6 +197,9 @@ export default class DataGridRow extends React.Component<any, any> {
                     );
                 }
 
+                if (cols?.indexOf(col.name) > 0) {
+                    total += parseFloat('' + col.value);
+                }
                 content.push(
                     <td
                         className={'data-grid-table-column data-grid-table-column-' + col.name}
@@ -213,6 +234,16 @@ export default class DataGridRow extends React.Component<any, any> {
             }
             lastColDef = colDef;
         });
+
+        if (root.getAttribute('SummaryRows')) {
+            content.push(
+                <td
+                    className="data-grid-table-column data-grid-table-column-#total"
+                >
+                    {total}
+                </td>,
+            );
+        }
 
         if (root.getAttribute('ButtonPositionRight', 'false').toLowerCase() === 'true') {
             content.push(
