@@ -197,7 +197,7 @@ export default class DataGridRow extends React.Component<any, any> {
                     );
                 }
 
-                if (cols?.indexOf(col.name) > 0) {
+                if (cols?.indexOf(col.name) >= 0) {
                     total += parseFloat('' + col.value);
                 }
                 content.push(
