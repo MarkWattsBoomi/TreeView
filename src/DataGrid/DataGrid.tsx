@@ -149,6 +149,9 @@ export default class DataGrid extends FlowComponent {
                     console.log('The rule on outcome ' + outcome.developerName + ' is invalid');
                 }
             }
+            if (outcome.attributes['EnabledOn']) {
+                const enabledField: FlowField = await this.loadValue(outcome.attributes['EnabledOn'].value);
+            }
         }
         return true;
     }

@@ -65,7 +65,7 @@ export default class DataGridFooter extends React.Component<any, any> {
 
         if (root.getAttribute('SummaryRows')) {
             tds.push(
-                
+
                 <td
                     className="data-grid-table-footer-cell"
                 />,
