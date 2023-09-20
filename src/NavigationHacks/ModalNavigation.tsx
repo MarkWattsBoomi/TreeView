@@ -1,6 +1,8 @@
-import { eLoadingState, FlowComponent, FlowMessageBox, modalDialogButton } from 'flow-component-model';
+import { eLoadingState, FlowComponent } from 'flow-component-model';
 import React, { CSSProperties } from 'react';
 import { eDebugLevel } from '..';
+import { FCMModal } from 'fcmkit';
+import { FCMModalButton } from 'fcmkit/lib/ModalDialog/FCMModalButton';
 
 // declare const manywho: IManywho;
 declare const manywho: any;
@@ -10,7 +12,7 @@ export default class ModalNavigation extends FlowComponent {
     context: any;
     debugLevel: eDebugLevel = eDebugLevel.error;
 
-    messageBox: FlowMessageBox;
+    messageBox: FCMModal;
 
     constructor(props: any) {
 
@@ -23,7 +25,7 @@ export default class ModalNavigation extends FlowComponent {
         this.state = {flag: 0};
     }
 
-    async setMessageBox(key: string, element: FlowMessageBox) {
+    async setMessageBox(key: string, element: FCMModal) {
         this.messageBox = element;
     }
 
@@ -60,10 +62,11 @@ export default class ModalNavigation extends FlowComponent {
                 this.forceUpdate();
             });
         } else {
-            this.messageBox?.showMessageBox(
+            this.messageBox?.showDialog(
+                null,
                 this.model.developerName,
                 (<div dangerouslySetInnerHTML={{ __html: this.model.content }} />),
-                [new modalDialogButton('Ok', this.messageBox.hideMessageBox)],
+                [new FCMModalButton('Ok', this.messageBox.hideDialog)],
             );
         }
     }
@@ -87,9 +90,9 @@ export default class ModalNavigation extends FlowComponent {
     render() {
         return (
             <div>
-                <FlowMessageBox
+                <FCMModal
                     parent={this}
-                    ref={(element: FlowMessageBox) => {this.setMessageBox(this.componentId, element); }}
+                    ref={(element: FCMModal) => {this.setMessageBox(this.componentId, element); }}
                 />
             </div>
         );

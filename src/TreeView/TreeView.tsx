@@ -1,11 +1,12 @@
 import React, { CSSProperties } from 'react';
 
-import { eContentType, eLoadingState, ePageActionBindingType, FlowComponent, FlowMessageBox, FlowObjectData, FlowObjectDataProperty, FlowOutcome, modalDialogButton } from 'flow-component-model';
-import FlowContextMenu from 'flow-component-model/lib/Dialogs/FlowContextMenu';
-import '../css/treeview.css';
+import { eContentType, eLoadingState, ePageActionBindingType, FlowComponent, FlowObjectData, FlowObjectDataProperty, FlowOutcome } from 'flow-component-model';
+import '../css/TreeView.css';
 import Services from '../Services';
-import TreeViewItem from './TreeViewItem';
+import TreeViewItem, { TreeViewConfig } from './TreeViewItem';
 import TreeViewNode from './TreeViewNode';
+import { FCMContextMenu, FCMModal } from 'fcmkit';
+import { FCMModalButton } from 'fcmkit/lib/ModalDialog/FCMModalButton';
 
 // declare const manywho: IManywho;
 declare const manywho: any;
@@ -22,6 +23,8 @@ export default class TreeView extends FlowComponent {
     context: any;
     debugLevel: eDebugLevel = eDebugLevel.error;
 
+    config: TreeViewConfig;
+
     selectedNodeId: number;
     nodeTree: Map<number, TreeViewItem>;
     nodeElementTree: any[];
@@ -30,7 +33,7 @@ export default class TreeView extends FlowComponent {
 
     draggedNode: number;
 
-    contextMenu: FlowContextMenu;
+    contextMenu: FCMContextMenu;
 
     defaultExpanded: boolean = false;
     expansionPath: number[] = [];
@@ -45,7 +48,7 @@ export default class TreeView extends FlowComponent {
     maxResults: number = 30;
     absoluteMaxResults: number = 1000;
 
-    messageBox: FlowMessageBox;
+    messageBox: FCMModal;
 
     constructor(props: any) {
         super(props);
@@ -77,6 +80,8 @@ export default class TreeView extends FlowComponent {
         this.absoluteMaxResults = parseInt(this.getAttribute('AbsoluteMaxSearchResults', '1000'));
 
         this.defaultExpanded = this.getAttribute('StartExpanded', 'false').toLowerCase() === 'true';
+
+        this.config = new TreeViewConfig(this);
 
     }
 
@@ -181,7 +186,7 @@ export default class TreeView extends FlowComponent {
             result = FlowObjectData.newInstance(targettype);
             Object.values(source.properties).forEach((prop: FlowObjectDataProperty) => {
                 if (prop.contentType !== eContentType.ContentObject && prop.contentType !== eContentType.ContentList) {
-                    result.addProperty(FlowObjectDataProperty.newInstance(prop.developerName, prop.contentType, prop.value));
+                    result.addProperty(FlowObjectDataProperty.newInstance(prop.developerName, prop.contentType, prop.value as string));
                 }
             });
         }
@@ -467,7 +472,7 @@ export default class TreeView extends FlowComponent {
         this.flatTree = new Map();
         const start: number = new Date().getTime();
         items.forEach((item: FlowObjectData) => {
-            const tvi: TreeViewItem = TreeViewItem.fromObjectData(this, item);
+            const tvi: TreeViewItem = TreeViewItem.fromObjectData(this.config, item);
             this.flatTree.set(tvi.itemId, tvi);
         });
 
@@ -521,7 +526,7 @@ export default class TreeView extends FlowComponent {
 
     async buildTreeFromApi(endpoint: string, user: string, token: string) {
 
-        const items: TreeViewItem[] = await Services.getHierarchyItems(this, endpoint, user, token);
+        const items: TreeViewItem[] = await Services.getHierarchyItems(this.config, endpoint, user, token);
         this.nodeTree = new Map();
         this.flatTree = new Map();
         const start: number = new Date().getTime();
@@ -646,7 +651,7 @@ export default class TreeView extends FlowComponent {
     }
 
     showAll(e: any) {
-        this.messageBox.hideMessageBox();
+        this.messageBox.hideDialog();
         this.filterTree(true);
     }
 
@@ -657,7 +662,9 @@ export default class TreeView extends FlowComponent {
     maxExceeded() {
         const tot: number = this.matchingNodes.length;
         this.matchingNodes = this.matchingNodes.slice(0, this.maxResults);
-        this.messageBox.showMessageBox('High Result Count Warning',
+        this.messageBox.showDialog(
+            null,
+            'High Result Count Warning',
             (<div>
                 <span>{'Your search returned a large number of matches and could impact performance'}</span>
                 <br/>
@@ -669,14 +676,16 @@ export default class TreeView extends FlowComponent {
                 <br/>
                 <span>{'(This may take some time)'}</span>
             </div>),
-            [new modalDialogButton('Show All', this.showAll), new modalDialogButton('Show Default', this.drawResults)],
+            [new FCMModalButton('Show All', this.showAll), new FCMModalButton('Show Default', this.drawResults)],
         );
     }
 
     absoluteMaxExceeded() {
         const tot: number = this.matchingNodes.length;
         this.matchingNodes = this.matchingNodes.slice(0, this.absoluteMaxResults);
-        this.messageBox.showMessageBox('Extreme High Result Count Warning',
+        this.messageBox.showDialog(
+            null,
+            'Extreme High Result Count Warning',
             (<div>
                 <span>{'Your search returned more than ' + this.absoluteMaxResults + ' matches and will impact performance'}</span>
                 <br/>
@@ -685,7 +694,7 @@ export default class TreeView extends FlowComponent {
                 <br/>
                 <br/>
             </div>),
-            [new modalDialogButton('Ok', this.drawResults)],
+            [new FCMModalButton('Ok', this.drawResults)],
         );
     }
 
@@ -698,7 +707,12 @@ export default class TreeView extends FlowComponent {
                     <span>Searching with less than 3 characters is not permitted.</span>
                 );
                 this.matchingNodes = undefined;
-                this.messageBox.showMessageBox('Search Criteria Restriction', content, [new modalDialogButton('Ok', this.messageBox.hideMessageBox)]);
+                this.messageBox.showDialog(
+                    null,
+                    'Search Criteria Restriction', 
+                    content, 
+                    [new FCMModalButton('Ok', this.messageBox.hideDialog)]
+                );
             } else {
                 this.matchingNodes = [];
                 // traverse all nodes
@@ -729,9 +743,11 @@ export default class TreeView extends FlowComponent {
                         break;
 
                     case this.matchingNodes.length === 0:
-                        this.messageBox.showMessageBox('No Results',
+                        this.messageBox.showDialog(
+                            null,
+                            'No Results',
                             (<span>{'The search returned no matches, please refine your search and try again.'}</span>),
-                            [new modalDialogButton('Ok', this.messageBox.hideMessageBox)],
+                            [new FCMModalButton('Ok', this.messageBox.hideDialog)],
                         );
                         this.searchBox.value = '';
                         break;
@@ -747,7 +763,7 @@ export default class TreeView extends FlowComponent {
     }
 
     drawResults() {
-        this.messageBox.hideMessageBox();
+        this.messageBox.hideDialog();
         this.buildTree(this.nodeTree);
         this.expandToSelected();
         this.expandToFilter();
@@ -807,7 +823,10 @@ export default class TreeView extends FlowComponent {
 
         // handle classes attribute and hidden and size
         const classes: string = 'treeview ' + this.getAttribute('classes', '');
-        const style: CSSProperties = {};
+        const style: CSSProperties = {
+            width: "webkit-fill-available",
+            height: "webkit-fill-available",
+        };
         if (this.model.visible === false) {
             style.display = 'none';
         }
@@ -818,23 +837,45 @@ export default class TreeView extends FlowComponent {
             style.height = this.model.height + 'px';
         }
 
-        const headerButtons: any[] = this.buildHeaderButtons();
+        const headerButtons: any[] = [];//this.buildHeaderButtons();
 
         const title: string = this.model.label || '';
 
+        let search: any;
+        if(this.model.searchable) {
+            search = (
+                <div
+                    className="treeview-header-search"
+                >
+                    <input
+                        className="treeview-header-search-input"
+                        ref={(element: HTMLInputElement) => {this.setSearchBox(element); }}
+                    />
+                    <span
+                        className={'glyphicon glyphicon-search treeview-header-search-button'}
+                        onClick={(e: any) => {this.filterTree(false); }}
+                    />
+                    <span
+                        className={'glyphicon glyphicon-remove treeview-header-search-button'}
+                        onClick={this.filterTreeClear}
+                    />
+
+                </div>
+            );
+        }
         this.lastContent = (
             <div
                 className={classes}
                 style={style}
                 onContextMenu={this.showContextMenu}
             >
-                <FlowContextMenu
+                <FCMContextMenu
                     parent={this}
-                    ref={(element: FlowContextMenu) => {this.contextMenu = element; }}
+                    ref={(element: FCMContextMenu) => {this.contextMenu = element; }}
                 />
-                <FlowMessageBox
+                <FCMModal
                     parent={this}
-                    ref={(element: FlowMessageBox) => {this.messageBox = element; }}
+                    ref={(element: FCMModal) => {this.messageBox = element; }}
                 />
                 <div
                     className="treeview-header"
@@ -849,23 +890,7 @@ export default class TreeView extends FlowComponent {
                             {title}
                         </span>
                     </div>
-                    <div
-                        className="treeview-header-search"
-                    >
-                        <input
-                            className="treeview-header-search-input"
-                            ref={(element: HTMLInputElement) => {this.setSearchBox(element); }}
-                        />
-                        <span
-                            className={'glyphicon glyphicon-search treeview-header-search-button'}
-                            onClick={(e: any) => {this.filterTree(false); }}
-                        />
-                        <span
-                            className={'glyphicon glyphicon-remove treeview-header-search-button'}
-                            onClick={this.filterTreeClear}
-                        />
-
-                    </div>
+                    {search}
                     <div
                         className="treeview-header-buttons"
                     >

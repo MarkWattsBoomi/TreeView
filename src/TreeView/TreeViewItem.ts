@@ -1,41 +1,35 @@
 import { FlowObjectData } from 'flow-component-model';
 import TreeView from './TreeView';
 
+export class TreeViewConfig {
+    fldItemId: string;
+    fldParentId: string;
+    fldSequence: string;
+    fldTitle: string;
+    fldDescription: string;
+    fldStatus: string;
+    fldCount: string;
+    fldIcon: string;
+    fldIsLocked: string;
+    fldIsSelectable: string;
+
+    constructor(tv: TreeView) {
+        this.fldItemId = tv.getAttribute('idProperty', 'ITEM_ID');
+        this.fldParentId = tv.getAttribute('parentProperty', 'PARENT_ID');
+        this.fldSequence = tv.getAttribute('sequenceProperty', 'SEQUENCE');
+        this.fldTitle = tv.getAttribute('titleProperty', 'TITLE');
+        this.fldDescription = tv.getAttribute('descriptionProperty', 'DESCRIPTION');
+        this.fldStatus = tv.getAttribute('statusProperty', 'STATUS');
+        this.fldCount = tv.getAttribute('countProperty', 'COUNT');
+        this.fldIcon = tv.getAttribute('iconProperty', 'ICON');
+        this.fldIsLocked = tv.getAttribute('lockedProperty', 'IS_LOCKED');
+        this.fldIsSelectable = tv.getAttribute('selectableProperty', 'SELECTABLE_CHILDREN');
+    }
+
+}
+
 export default class TreeViewItem {
 
-    static fromObjectData(tv: TreeView, objectData: FlowObjectData): TreeViewItem {
-        const tvi: TreeViewItem = new TreeViewItem(tv);
-        tvi.itemLevel = 0;
-        tvi.id = objectData.internalId;
-        tvi.itemId = objectData.properties[tvi.fldItemId]?.value as number;
-        tvi.parentItemId = objectData.properties[tvi.fldParentId]?.value as number;
-        tvi.itemName = objectData.properties[tvi.fldTitle]?.value as string;
-        tvi.itemDescription = objectData.properties[tvi.fldDescription]?.value as string;
-        tvi.itemStatus = objectData.properties[tvi.fldStatus]?.value as string;
-        tvi.itemLocked = objectData.properties[tvi.fldIsLocked]?.value as string;
-        tvi.itemSelectable = objectData.properties[tvi.fldIsSelectable]?.value as string;
-        // tvi.itemType = objectData.properties["ITEM_TYPE"]?.value as string;
-        tvi.children = new Map();
-        tvi.objectData = objectData;
-        return tvi;
-    }
-
-    static fromJSON(tv: TreeView, json: any): TreeViewItem {
-        const tvi: TreeViewItem = new TreeViewItem(tv);
-        tvi.itemLevel = 0;
-        tvi.id = json[tvi.fldItemId];
-        tvi.itemId = json[tvi.fldItemId];
-        tvi.parentItemId = json[tvi.fldParentId];
-        tvi.itemName = json[tvi.fldTitle];
-        tvi.itemDescription = json[tvi.fldDescription];
-        tvi.itemStatus = json[tvi.fldStatus];
-        tvi.itemLocked = json[tvi.fldIsLocked];
-        tvi.itemSelectable = json[tvi.fldIsSelectable];
-        tvi.itemType = json.ITEM_TYPE;
-        tvi.children = new Map();
-        tvi.objectData = json;
-        return tvi;
-    }
     id: string;
     parentId: string ;
     parentItemId: number ;
@@ -51,30 +45,39 @@ export default class TreeViewItem {
     children: Map<number, TreeViewItem> = new Map();
     objectData: FlowObjectData;
 
-    fldItemId: string;
-    fldParentId: string;
-    fldSequence: string;
-    fldTitle: string;
-    fldDescription: string;
-    fldStatus: string;
-    fldCount: string;
-    fldIcon: string;
-    fldIsLocked: string;
-    fldIsSelectable: string;
-
-    constructor(tv: TreeView) {
-        this.fldItemId = tv.getAttribute('IdField', 'ITEM_ID');
-        this.fldParentId = tv.getAttribute('ParentField', 'PARENT_ID');
-        this.fldSequence = tv.getAttribute('SequenceField', 'SEQUENCE');
-        this.fldTitle = tv.getAttribute('TitleField', 'TITLE');
-        this.fldDescription = tv.getAttribute('DescriptionField', 'DESCRIPTION');
-        this.fldStatus = tv.getAttribute('StatusField', 'STATUS');
-        this.fldCount = tv.getAttribute('CountField', 'COUNT');
-        this.fldIcon = tv.getAttribute('IconField', 'ICON');
-        this.fldIsLocked = tv.getAttribute('IsLockedField', 'IS_LOCKED');
-        this.fldIsSelectable = tv.getAttribute('IsSelectableField', 'SELECTABLE_CHILDREN');
+    static fromObjectData(config: TreeViewConfig, objectData: FlowObjectData): TreeViewItem {
+        const tvi: TreeViewItem = new TreeViewItem();
+        tvi.itemLevel = 0;
+        tvi.id = objectData.internalId;
+        tvi.itemId = objectData.properties[config.fldItemId]?.value as number;
+        tvi.parentItemId = objectData.properties[config.fldParentId]?.value as number;
+        tvi.itemName = objectData.properties[config.fldTitle]?.value as string;
+        tvi.itemDescription = objectData.properties[config.fldDescription]?.value as string;
+        tvi.itemStatus = objectData.properties[config.fldStatus]?.value as string;
+        tvi.itemLocked = objectData.properties[config.fldIsLocked]?.value as string;
+        tvi.itemSelectable = objectData.properties[config.fldIsSelectable]?.value as string;
+        tvi.children = new Map();
+        tvi.objectData = objectData;
+        return tvi;
     }
 
+    static fromJSON(config: TreeViewConfig, json: any): TreeViewItem {
+        const tvi: TreeViewItem = new TreeViewItem();
+        tvi.itemLevel = 0;
+        tvi.id = json[config.fldItemId];
+        tvi.itemId = json[config.fldItemId];
+        tvi.parentItemId = json[config.fldParentId];
+        tvi.itemName = json[config.fldTitle];
+        tvi.itemDescription = json[config.fldDescription];
+        tvi.itemStatus = json[config.fldStatus];
+        tvi.itemLocked = json[config.fldIsLocked];
+        tvi.itemSelectable = json[config.fldIsSelectable];
+        tvi.itemType = json.ITEM_TYPE;
+        tvi.children = new Map();
+        tvi.objectData = json;
+        return tvi;
+    }
+    
     setItemLevel(level: number) {
         this.itemLevel = level;
         this.children.forEach((child: TreeViewItem) => {

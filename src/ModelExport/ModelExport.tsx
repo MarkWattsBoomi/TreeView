@@ -152,21 +152,19 @@ export default class ModelExport extends FlowComponent {
         file = headers + '\r\n' + body;
 
         const blob = new Blob([file], { type: 'text/csv' });
-        if (navigator.msSaveBlob) { // IE 10+
-            navigator.msSaveBlob(blob, this.getAttribute('ExportFileName', 'output') + '.csv');
-        } else {
-            const link = document.createElement('a');
-            if (link.download !== undefined) { // feature detection
-                // Browsers that support HTML5 download attribute
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', this.getAttribute('ExportFileName', 'output') + '.csv');
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+        
+        const link = document.createElement('a');
+        if (link.download !== undefined) { // feature detection
+            // Browsers that support HTML5 download attribute
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', this.getAttribute('ExportFileName', 'output') + '.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
+        
         if (this.outcomes['OnExport']) {
             this.triggerOutcome('OnExport');
         }

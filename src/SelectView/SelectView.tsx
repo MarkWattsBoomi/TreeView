@@ -1,12 +1,13 @@
 import React, { CSSProperties } from 'react';
 
-import { eLoadingState, FlowComponent, FlowDialogBox, FlowDisplayColumn, FlowField, FlowMessageBox, FlowObjectData, FlowObjectDataArray, FlowOutcome, modalDialogButton } from 'flow-component-model';
-import FlowContextMenu from 'flow-component-model/lib/Dialogs/FlowContextMenu';
+import { eLoadingState, FlowComponent, FlowDisplayColumn, FlowField, FlowObjectData, FlowObjectDataArray, FlowOutcome } from 'flow-component-model';
 import { eDebugLevel } from '..';
 import '../css/SelectView.css';
 import SelectViewHeader from './SelectViewColumn';
 import {SelectViewColumn, SelectViewItem } from './SelectViewItem';
 import SelectViewRow from './SelectViewRow';
+import { FCMContextMenu, FCMModal } from 'fcmkit';
+import { FCMModalButton } from 'fcmkit/lib/ModalDialog/FCMModalButton';
 
 // declare const manywho: IManywho;
 declare const manywho: any;
@@ -26,9 +27,8 @@ export default class SelectView extends FlowComponent {
     colComponents: Map<string, SelectViewHeader> = new Map();
     colElements: SelectViewHeader[] = [];
 
-    messageBox: FlowMessageBox;
-    dialogBox: FlowDialogBox;
-    contextMenu: FlowContextMenu;
+    messageBox: FCMModal;
+    contextMenu: FCMContextMenu;
 
     matchingRows: Map<string, string> = new Map();
 
@@ -379,9 +379,11 @@ export default class SelectView extends FlowComponent {
 
             // over abs max.  truncate and warn
             case this.matchingRows.size === 0:
-                this.messageBox.showMessageBox('No Results',
+                this.messageBox.showDialog(
+                    null,
+                    'No Results',
                     (<span>{'The search returned no matches, please refine your search and try again.'}</span>),
-                    [new modalDialogButton('Ok', this.messageBox.hideMessageBox)],
+                    [new FCMModalButton('Ok', this.messageBox.hideDialog)],
                 );
                 this.searchBox.value = '';
                 break;
@@ -464,17 +466,13 @@ export default class SelectView extends FlowComponent {
                 style={style}
                 onContextMenu={this.showContextMenu}
             >
-                <FlowMessageBox
+                <FCMModal
                     parent={this}
-                    ref={(element: FlowMessageBox) => {this.messageBox = element; }}
+                    ref={(element: FCMModal) => {this.messageBox = element; }}
                 />
-                <FlowDialogBox
+                <FCMContextMenu
                     parent={this}
-                    ref={(element: FlowDialogBox) => {this.dialogBox = element; }}
-                />
-                <FlowContextMenu
-                    parent={this}
-                    ref={(element: FlowContextMenu) => {this.contextMenu = element; }}
+                    ref={(element: FCMContextMenu) => {this.contextMenu = element; }}
                 />
                 <div
                     className="select-view-header"

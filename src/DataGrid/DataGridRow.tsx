@@ -1,6 +1,6 @@
 import React, { CSSProperties } from 'react';
 
-import { eContentType, FlowDisplayColumn, FlowField, FlowObjectData, FlowOutcome, modalDialogButton } from 'flow-component-model';
+import { eContentType, FlowDisplayColumn, FlowField, FlowObjectData, FlowOutcome } from 'flow-component-model';
 import DataGrid from './DataGrid';
 import { DataGridColumn, DataGridItem } from './DataGridItem';
 

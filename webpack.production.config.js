@@ -10,28 +10,15 @@ module.exports = function(env) {
             filename: flow.filenames.js,
             path: path.resolve(__dirname, 'build')
         },
-        devtool: 'inline-source-map',
         resolve: {
             extensions: [".ts", ".tsx", ".js", ".json"]
         },
         mode: 'production',
         module: {
             rules: [
-                {
-                    test: /\.tsx?$/,
-                    enforce: 'pre',
-                    use: [
-                        {
-                            loader: 'tslint-loader',
-                            options: {
-                                fix: true
-                            }
-                        }
-                    ]
-                },
                 { 
                     test: /\.tsx?$/, 
-                    loader: "awesome-typescript-loader" 
+                    loader: "ts-loader" 
                 },
                 { 
                     test: /\.js$/, 

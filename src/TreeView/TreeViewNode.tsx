@@ -1,15 +1,16 @@
-import { FlowDialogBox, FlowMessageBox, FlowOutcome,  modalDialogButton } from 'flow-component-model';
-import FlowContextMenu from 'flow-component-model/lib/Dialogs/FlowContextMenu';
+import {  FlowOutcome } from 'flow-component-model';
 import React, { CSSProperties } from 'react';
 import ItemInfo from '../Dialogs/ItemInfo';
 import TreeView, { eDebugLevel } from './TreeView';
 import TreeViewItem from './TreeViewItem';
+import { FCMContextMenu, FCMModal } from 'fcmkit';
+import { FCMModalButton } from 'fcmkit/lib/ModalDialog/FCMModalButton';
 
 export default class TreeViewNode extends React.Component<any, any> {
     context: any;
     canvas: any;
-    contextMenu: FlowContextMenu;
-    messageBox: FlowMessageBox;
+    contextMenu: FCMContextMenu;
+    messageBox: FCMModal;
 
     expanded: boolean = false;
 
@@ -88,7 +89,11 @@ export default class TreeViewNode extends React.Component<any, any> {
                 display={root.model.displayColumns}
             />
         );
-        this.messageBox.showMessageBox(node.itemName, content, [new modalDialogButton('Close', this.messageBox.hideMessageBox)]);
+        this.messageBox.showDialog(
+            null,
+            node.itemName, 
+            content, 
+            [new FCMModalButton('Close', this.messageBox.hideDialog)]);
     }
 
     onSelect(e: any) {
@@ -154,7 +159,7 @@ export default class TreeViewNode extends React.Component<any, any> {
             });
         }
 
-        let label: string = node.itemName;
+        let label: string = node.itemName || node.itemDescription;
         if (root.debugLevel >= eDebugLevel.info) {
             label += ' (' + node.itemId + ') (' + node.parentId + ')';
         }
@@ -216,13 +221,13 @@ export default class TreeViewNode extends React.Component<any, any> {
                         data-node={node.itemId}
                         onContextMenu={this.showContextMenu}
                     >
-                        <FlowMessageBox
+                        <FCMModal
                             parent={this}
-                            ref={(element: FlowMessageBox) => {this.messageBox = element; }}
+                            ref={(element: FCMModal) => {this.messageBox = element; }}
                         />
-                        <FlowContextMenu
+                        <FCMContextMenu
                             parent={this}
-                            ref={(element: FlowContextMenu) => {this.contextMenu = element; }}
+                            ref={(element: FCMContextMenu) => {this.contextMenu = element; }}
                         />
                         <div
                             className="treeview-node-icons"

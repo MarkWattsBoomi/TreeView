@@ -1,6 +1,8 @@
-import { eLoadingState, FlowComponent, FlowMessageBox, modalDialogButton } from 'flow-component-model';
+import { eLoadingState, FlowComponent } from 'flow-component-model';
 import React, { CSSProperties } from 'react';
 import { eDebugLevel } from '..';
+import { FCMModal } from 'fcmkit';
+import { FCMModalButton } from 'fcmkit/lib/ModalDialog/FCMModalButton';
 
 // declare const manywho: IManywho;
 declare const manywho: any;
@@ -18,7 +20,7 @@ export default class NavigationWarning extends FlowComponent {
     modifiedElements: any[] = [];
     unloading: boolean = false;
 
-    messageBox: FlowMessageBox;
+    messageBox: FCMModal;
 
     constructor(props: any) {
         super(props);
@@ -62,23 +64,25 @@ export default class NavigationWarning extends FlowComponent {
         ev.preventDefault();
         ev.stopPropagation();
         this.clickedMenuItem = ev.target;
-        this.messageBox.showMessageBox(
+        this.messageBox.showDialog(
+            null,
             this.model.label || this.model.developerName,
             (<div dangerouslySetInnerHTML={{ __html: this.model.content }} />),
-            [new modalDialogButton(this.getAttribute('continueLabel', 'Continue'), this.continue), new modalDialogButton(this.getAttribute('cancelLabel', 'Cancel'), this.cancel)],
+            [new FCMModalButton(this.getAttribute('continueLabel', 'Continue'), this.continue), 
+            new FCMModalButton(this.getAttribute('cancelLabel', 'Cancel'), this.cancel)],
         );
 
     }
 
     continue() {
-        this.messageBox.hideMessageBox();
+        this.messageBox.hideDialog();
         const nav = this.nav.get(this.clickedMenuItem.id);
         manywho.engine.navigate(this.navId, nav.id, nav.locationMapElementId, this.flowKey);
         this.clickedMenuItem = undefined;
     }
 
     cancel() {
-        this.messageBox.hideMessageBox();
+        this.messageBox.hideDialog();
         this.clickedMenuItem = undefined;
     }
 
@@ -124,9 +128,9 @@ export default class NavigationWarning extends FlowComponent {
 
     render() {
         return (
-            <FlowMessageBox
+            <FCMModal
                 parent={this}
-                ref={(element: FlowMessageBox) => {this.messageBox = element; }}
+                ref={(element: FCMModal) => {this.messageBox = element; }}
             />
         );
     }

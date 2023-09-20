@@ -1,10 +1,10 @@
 import TreeView from './TreeView/TreeView';
-import TreeViewItem from './TreeView/TreeViewItem';
+import TreeViewItem, { TreeViewConfig } from './TreeView/TreeViewItem';
 
 export default class Services {
 
     static async getHierarchyItems(
-        tv: TreeView,
+        config: TreeViewConfig,
         endPoint: string,
         userName: string,
         token: string,
@@ -37,7 +37,7 @@ export default class Services {
         if (response.status === 200) {
             const op: any[] = await response.json();
             op.forEach((item: any) => {
-                results.push(TreeViewItem.fromJSON(tv, item));
+                results.push(TreeViewItem.fromJSON(config, item));
             });
         } else {
             const errorText = await response.text();

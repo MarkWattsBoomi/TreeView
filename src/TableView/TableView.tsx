@@ -1,12 +1,13 @@
 import React, { CSSProperties } from 'react';
 
-import { eContentType, eLoadingState, ePageActionBindingType, FlowComponent, FlowDisplayColumn, FlowField, FlowMessageBox, FlowObjectData, FlowObjectDataArray, FlowOutcome, modalDialogButton } from 'flow-component-model';
-import FlowContextMenu from 'flow-component-model/lib/Dialogs/FlowContextMenu';
+import { eContentType, eLoadingState, ePageActionBindingType, FlowComponent, FlowDisplayColumn, FlowField, FlowObjectData, FlowObjectDataArray, FlowOutcome } from 'flow-component-model';
 import { eDebugLevel } from '..';
 import '../css/TableView.css';
 import TableViewHeader from './TableViewColumn';
 import {TableViewColumn, TableViewItem } from './TableViewItem';
 import TableViewRow from './TableViewRow';
+import { FCMContextMenu, FCMModal } from 'fcmkit';
+import { FCMModalButton } from 'fcmkit/lib/ModalDialog/FCMModalButton';
 
 // declare const manywho: IManywho;
 declare const manywho: any;
@@ -26,8 +27,8 @@ export default class TableView extends FlowComponent {
     colComponents: Map<string, TableViewHeader> = new Map();
     colElements: TableViewHeader[] = [];
 
-    contextMenu: FlowContextMenu;
-    messageBox: FlowMessageBox;
+    contextMenu: FCMContextMenu;
+    messageBox: FCMModal;
 
     matchingRows: Map<string, string> = new Map();
 
@@ -407,9 +408,11 @@ export default class TableView extends FlowComponent {
 
             // over abs max.  truncate and warn
             case this.matchingRows.size === 0 && criteria?.length > 0:
-                this.messageBox.showMessageBox('No Results',
+                this.messageBox.showDialog(
+                    null,
+                    'No Results',
                     (<span>{'The search returned no matches, please refine your search and try again.'}</span>),
-                    [new modalDialogButton('Ok', this.messageBox.hideMessageBox)],
+                    [new FCMModalButton('Ok', this.messageBox.hideDialog)],
                 );
                 this.searchBox.value = '';
                 break;
@@ -492,13 +495,13 @@ export default class TableView extends FlowComponent {
                 style={style}
                 onContextMenu={this.showContextMenu}
             >
-                <FlowMessageBox
+                <FCMModal
                     parent={this}
-                    ref={(element: FlowMessageBox) => {this.messageBox = element; }}
+                    ref={(element: FCMModal) => {this.messageBox = element; }}
                 />
-                <FlowContextMenu
+                <FCMContextMenu
                     parent={this}
-                    ref={(element: FlowContextMenu) => {this.contextMenu = element; }}
+                    ref={(element: FCMContextMenu) => {this.contextMenu = element; }}
                 />
                 <div
                     className="treeview-header"

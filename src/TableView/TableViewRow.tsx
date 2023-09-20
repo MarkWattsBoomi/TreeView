@@ -1,11 +1,13 @@
-import { FlowDisplayColumn, FlowMessageBox, FlowOutcome, modalDialogButton } from 'flow-component-model';
+import { FlowDisplayColumn, FlowOutcome } from 'flow-component-model';
 import React, { CSSProperties } from 'react';
 import TableView from './TableView';
 import { TableViewColumn, TableViewItem } from './TableViewItem';
+import { FCMModal } from 'fcmkit';
+import { FCMModalButton } from 'fcmkit/lib/ModalDialog/FCMModalButton';
 
 export default class TableViewRow extends React.Component<any, any> {
 
-    messageBox: FlowMessageBox;
+    messageBox: FCMModal;
 
     constructor(props: any) {
         super(props);
@@ -28,14 +30,15 @@ export default class TableViewRow extends React.Component<any, any> {
         const root: TableView = this.props.root;
         const row: TableViewItem = root.rowMap.get(this.props.rowId);
 
-        this.messageBox.showMessageBox(
+        this.messageBox.showDialog(
+            null,
             row.columns.get('ATTRIBUTE_NAME').value,
             (
                 <span>
                     {(row.columns.get(oldCol).value || '[Empty]') + ' => ' + (row.columns.get(newCol).value || '[Empty]')}
                 </span>
             ),
-            [new modalDialogButton('Ok', this.messageBox.hideMessageBox)],
+            [new FCMModalButton('Ok', this.messageBox.hideDialog)],
         );
     }
 
@@ -154,9 +157,9 @@ export default class TableViewRow extends React.Component<any, any> {
                 onClick={(e: any) => {root.doOutcome('OnSelect', row.id); }}
                 style={style}
             >
-                <FlowMessageBox
+                <FCMModal
                     parent={this}
-                    ref={(element: FlowMessageBox) => {this.messageBox = element; }}
+                    ref={(element: FCMModal) => {this.messageBox = element; }}
                 />
                 <div
                     className={'table-view-row-buttons' + selectedClass}
