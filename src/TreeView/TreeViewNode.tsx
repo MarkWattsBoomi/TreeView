@@ -105,7 +105,7 @@ export default class TreeViewNode extends React.Component<any, any> {
     render() {
         let expander: any;
         let content: any;
-        let icon: any;
+        let icon: string;
 
         const buttons: any[] = [];
         const root: TreeView = this.props.root;
@@ -186,11 +186,21 @@ export default class TreeViewNode extends React.Component<any, any> {
                 />
             );
         } else {
-            nodeIcon = (
-                <span
-                    className={'glyphicon glyphicon-' + icon + ' treeview-node-icon'}
-                />
-            );
+            if(icon.toLowerCase().startsWith("http")){
+                nodeIcon = (
+                    <img
+                        src={icon}
+                        className={'treeview-node-img'}
+                    />
+                );
+            }
+            else {
+                nodeIcon = (
+                    <span
+                        className={'glyphicon glyphicon-' + icon + ' treeview-node-icon'}
+                    />
+                );
+            }
         }
 
         return(

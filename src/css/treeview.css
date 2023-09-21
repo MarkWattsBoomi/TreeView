@@ -219,6 +219,11 @@
     pointer-events: none;
 }
 
+.treeview-node-img {
+    width: 1.5rem;
+    margin-right: 0.5rem;
+}
+
 .treeview-node-label {
     display: flex;
     flex-direction: row;

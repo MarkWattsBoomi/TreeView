@@ -56,6 +56,7 @@ export default class TreeViewItem {
         tvi.itemStatus = objectData.properties[config.fldStatus]?.value as string;
         tvi.itemLocked = objectData.properties[config.fldIsLocked]?.value as string;
         tvi.itemSelectable = objectData.properties[config.fldIsSelectable]?.value as string;
+        tvi.itemIcon = objectData.properties[config.fldIcon]?.value as string;
         tvi.children = new Map();
         tvi.objectData = objectData;
         return tvi;
